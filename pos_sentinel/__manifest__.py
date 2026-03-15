@@ -58,9 +58,13 @@ Security
     ],
     'assets': {
         'point_of_sale._assets_pos': [
-            'pos_sentinel/static/src/js/**/*',
-            'pos_sentinel/static/src/xml/**/*',
-            'pos_sentinel/static/src/css/**/*',
+            'pos_sentinel/static/src/js/sentinel_service.js',
+            'pos_sentinel/static/src/js/shadow_logger.js',
+        ],
+        'web.assets_backend': [
+            'pos_sentinel/static/src/js/dashboard.js',
+            'pos_sentinel/static/src/xml/dashboard.xml',
+            'pos_sentinel/static/src/css/dashboard.css',
         ],
     },
     'images': [

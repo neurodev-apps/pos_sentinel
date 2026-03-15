@@ -1,12 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
+    <!-- Dashboard client action -->
+    <record id="action_pos_sentinel_dashboard" model="ir.actions.client">
+        <field name="name">POS Sentinel Dashboard</field>
+        <field name="tag">pos_sentinel_dashboard</field>
+    </record>
+
     <!-- Top-level menu under Point of Sale -->
     <menuitem id="menu_pos_sentinel_root"
               name="POS Sentinel"
               parent="point_of_sale.menu_point_root"
               sequence="90"
               groups="pos_sentinel.group_pos_auditor"/>
+
+    <!-- Dashboard (first item) -->
+    <menuitem id="menu_pos_sentinel_dashboard"
+              name="Dashboard"
+              parent="menu_pos_sentinel_root"
+              action="action_pos_sentinel_dashboard"
+              sequence="5"/>
 
     <!-- Audit Events -->
     <menuitem id="menu_pos_audit_events"

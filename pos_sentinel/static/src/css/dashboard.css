@@ -1,0 +1,32 @@
+.o_pos_sentinel_dashboard {
+    background-color: #f8f9fa;
+    min-height: 100%;
+}
+
+.o_sentinel_header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.o_pos_sentinel_dashboard .card {
+    transition: box-shadow 0.2s ease;
+}
+
+.o_pos_sentinel_dashboard .card:hover {
+    box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.1) !important;
+}
+
+.o_pos_sentinel_dashboard .card-title {
+    font-weight: 700;
+}
+
+.o_pos_sentinel_dashboard .table-sm td,
+.o_pos_sentinel_dashboard .table-sm th {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.875rem;
+}
+
+.o_pos_sentinel_dashboard .badge {
+    font-size: 0.75rem;
+}
