@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Top-level menu under Point of Sale -->
+    <menuitem id="menu_pos_sentinel_root"
+              name="POS Sentinel"
+              parent="point_of_sale.menu_point_root"
+              sequence="90"
+              groups="pos_sentinel.group_pos_auditor"/>
+
+    <!-- Audit Events -->
+    <menuitem id="menu_pos_audit_events"
+              name="Audit Events"
+              parent="menu_pos_sentinel_root"
+              action="action_pos_audit_event"
+              sequence="10"/>
+
+</odoo>

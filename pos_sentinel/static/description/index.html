@@ -1,0 +1,131 @@
+<section class="oe_container">
+    <div class="oe_row oe_spaced">
+        <div class="oe_span12">
+            <h2 class="oe_slogan" style="color: #875A7B;">POS Sentinel</h2>
+            <h3 class="oe_slogan">Behavioral Fraud Detection for Odoo POS</h3>
+        </div>
+    </div>
+</section>
+
+<section class="oe_container oe_dark">
+    <div class="oe_row oe_spaced">
+        <div class="oe_span12">
+            <h3>Real-time fraud detection with immutable audit trail</h3>
+            <p>
+                POS Sentinel monitors every Point of Sale operation in real time,
+                detecting suspicious patterns like excessive voids, unauthorized
+                discounts, and anomalous cash movements. Every event is captured in
+                a <strong>SHA-256 signed, immutable audit log</strong> that cannot
+                be modified, deleted, or duplicated.
+            </p>
+        </div>
+    </div>
+</section>
+
+<section class="oe_container">
+    <div class="oe_row oe_spaced">
+        <div class="oe_span6">
+            <h3><i class="fa fa-shield"></i> Shadow Logger</h3>
+            <p>
+                Captures POS events silently without affecting cashier workflow.
+                No popups, no delays — just invisible monitoring.
+            </p>
+        </div>
+        <div class="oe_span6">
+            <h3><i class="fa fa-brain"></i> Scoring Engine</h3>
+            <p>
+                Behavioral scoring engine calculates risk levels based on
+                configurable rules and thresholds.
+            </p>
+        </div>
+    </div>
+    <div class="oe_row oe_spaced">
+        <div class="oe_span6">
+            <h3><i class="fa fa-lock"></i> Immutable Audit Trail</h3>
+            <p>
+                Triple-layer immutability protection: ORM overrides, ACL rules,
+                and record-level security. SHA-256 integrity hashing with
+                cryptographically-secure dynamic salt.
+            </p>
+        </div>
+        <div class="oe_span6">
+            <h3><i class="fa fa-bell"></i> Real-time Alerts</h3>
+            <p>
+                Automatic notifications when risk thresholds are exceeded.
+                Configurable alert channels and escalation rules.
+            </p>
+        </div>
+    </div>
+</section>
+
+<section class="oe_container oe_dark">
+    <div class="oe_row oe_spaced">
+        <div class="oe_span12">
+            <h3>Monitored Events</h3>
+            <ul>
+                <li><strong>Line Voids</strong> — Tracks every removed line with original product and amount</li>
+                <li><strong>Price Overrides</strong> — Detects manual price changes vs. pricelist prices</li>
+                <li><strong>Discounts</strong> — Flags excessive discounts above configurable thresholds</li>
+                <li><strong>Refunds</strong> — Monitors refund patterns per cashier and session</li>
+                <li><strong>Cash Movements</strong> — Records all cash-in and cash-out operations</li>
+                <li><strong>Session Anomalies</strong> — Detects unusual open/close patterns</li>
+                <li><strong>Order Deletions</strong> — Captures deleted orders with full detail</li>
+                <li><strong>Quantity Changes</strong> — Tracks suspicious quantity modifications</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<section class="oe_container">
+    <div class="oe_row oe_spaced">
+        <div class="oe_span12">
+            <h3>Security Architecture</h3>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Layer</th>
+                        <th>Protection</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>ORM Override</td>
+                        <td>write(), unlink(), copy() blocked with UserError</td>
+                    </tr>
+                    <tr>
+                        <td>ACL (ir.model.access)</td>
+                        <td>perm_write=0, perm_unlink=0 for all groups</td>
+                    </tr>
+                    <tr>
+                        <td>Record Rules (ir.rule)</td>
+                        <td>perm_write=False, perm_unlink=False</td>
+                    </tr>
+                    <tr>
+                        <td>Integrity Hash</td>
+                        <td>SHA-256 with dynamic salt — tamper-evident</td>
+                    </tr>
+                    <tr>
+                        <td>Automated Verification</td>
+                        <td>Weekly cron checks all hashes, flags mismatches</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<section class="oe_container oe_dark">
+    <div class="oe_row oe_spaced">
+        <div class="oe_span12 text-center">
+            <h3>Support</h3>
+            <p>
+                <i class="fa fa-envelope"></i>
+                <a href="mailto:neurodev.odoo@gmail.com">neurodev.odoo@gmail.com</a>
+            </p>
+            <p>
+                <i class="fa fa-globe"></i>
+                <a href="https://neurodev.cl">https://neurodev.cl</a>
+            </p>
+        </div>
+    </div>
+</section>

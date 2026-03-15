@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db

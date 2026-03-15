@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data noupdate="1">
+
+    <!-- Default system parameters -->
+    <record id="param_retention_days" model="ir.config_parameter">
+        <field name="key">pos_sentinel.retention_days</field>
+        <field name="value">365</field>
+    </record>
+
+    <!-- Cron: Integrity Check (weekly) -->
+    <record id="cron_verify_integrity" model="ir.cron">
+        <field name="name">POS Sentinel: Verify Event Integrity</field>
+        <field name="model_id" ref="model_pos_audit_event"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_verify_integrity()</field>
+        <field name="interval_number">7</field>
+        <field name="interval_type">days</field>
+        <field name="numbercall">-1</field>
+        <field name="active">True</field>
+        <field name="priority">50</field>
+    </record>
+
+    <!-- Cron: Cleanup report (monthly, informational only) -->
+    <record id="cron_cleanup_report" model="ir.cron">
+        <field name="name">POS Sentinel: Retention Report</field>
+        <field name="model_id" ref="model_pos_audit_event"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_cleanup_old_events()</field>
+        <field name="interval_number">30</field>
+        <field name="interval_type">days</field>
+        <field name="numbercall">-1</field>
+        <field name="active">True</field>
+        <field name="priority">100</field>
+    </record>
+
+</data>
+</odoo>

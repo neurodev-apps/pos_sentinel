@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data>
+
+    <!-- Module Category -->
+    <record id="module_category_pos_sentinel" model="ir.module.category">
+        <field name="name">POS Sentinel</field>
+        <field name="sequence">210</field>
+    </record>
+
+    <!-- Privilege (v19 selector in User form) -->
+    <record id="res_groups_privilege_pos_sentinel" model="res.groups.privilege">
+        <field name="name">POS Sentinel</field>
+        <field name="sequence">210</field>
+        <field name="category_id" ref="module_category_pos_sentinel"/>
+    </record>
+
+    <!-- POS Auditor: read-only access to audit events and dashboard -->
+    <record id="group_pos_auditor" model="res.groups">
+        <field name="name">POS Auditor</field>
+        <field name="sequence">10</field>
+        <field name="privilege_id" ref="res_groups_privilege_pos_sentinel"/>
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        <field name="comment">Read-only access to POS audit events and the fraud dashboard.</field>
+    </record>
+
+    <!-- POS Security Manager: full access, inherits from POS Auditor -->
+    <record id="group_pos_security_manager" model="res.groups">
+        <field name="name">POS Security Manager</field>
+        <field name="sequence">20</field>
+        <field name="privilege_id" ref="res_groups_privilege_pos_sentinel"/>
+        <field name="implied_ids" eval="[(4, ref('group_pos_auditor'))]"/>
+        <field name="comment">Full access: configure scoring rules, view all events and dashboard, run integrity checks.</field>
+    </record>
+
+    <!-- Record Rules: multi-company access -->
+    <record id="rule_pos_audit_event_company_auditor" model="ir.rule">
+        <field name="name">POS Audit Event: Company Access (Auditor)</field>
+        <field name="model_id" ref="model_pos_audit_event"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_pos_auditor'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <record id="rule_pos_audit_event_company_manager" model="ir.rule">
+        <field name="name">POS Audit Event: Full Access (Security Manager)</field>
+        <field name="model_id" ref="model_pos_audit_event"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_pos_security_manager'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+</data>
+</odoo>

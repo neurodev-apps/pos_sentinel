@@ -1,0 +1,71 @@
+# -*- coding: utf-8 -*-
+{
+    'name': 'POS Sentinel - Behavioral Fraud Detection',
+    'version': '19.0.1.0.0',
+    'category': 'Point of Sale',
+    'summary': 'Real-time behavioral fraud detection and immutable audit trail for Odoo POS',
+    'description': """
+POS Sentinel — Behavioral Fraud Detection for Odoo POS
+=======================================================
+
+Detects suspicious patterns in Point of Sale operations using a behavioral
+scoring engine. Every POS event is captured in an **immutable, SHA-256 signed
+audit log** that cannot be modified, deleted, or duplicated.
+
+Key Features
+------------
+* **Shadow Logger**: Captures POS events in real time without affecting cashier workflow.
+* **Neuro-Scoring Engine**: Calculates risk scores based on configurable behavioral rules.
+* **Immutable Audit Trail**: SHA-256 integrity hashing with dynamic salt — tamper-evident.
+* **Real-time Alerts**: Automatic notifications when risk thresholds are exceeded.
+* **Compliance Dashboard**: OWL 2 dashboard with charts and drill-down analytics.
+* **Multi-company**: Full multi-company support with company-scoped security rules.
+
+Monitored Events
+----------------
+* Line voids and modifications after payment
+* Manual price overrides and excessive discounts
+* Refunds and returns
+* Cash movements (in/out)
+* Session open/close anomalies
+* Order deletions and sequence gaps
+
+Security
+--------
+* Triple-layer immutability: ORM overrides + ACL + record rules
+* SHA-256 integrity hashing with cryptographically-secure dynamic salt
+* Automated integrity verification via scheduled action
+* Separation of duties: POS Auditor (read-only) vs Security Manager (config)
+    """,
+    'author': 'NeuroDev',
+    'website': 'https://neurodev.cl',
+    'support': 'neurodev.odoo@gmail.com',
+    'license': 'OPL-1',
+    'price': 249.00,
+    'currency': 'USD',
+    'depends': [
+        'point_of_sale',
+        'mail',
+    ],
+    'data': [
+        'security/pos_sentinel_security.xml',
+        'security/ir.model.access.csv',
+        'data/pos_sentinel_data.xml',
+        'views/pos_audit_event_views.xml',
+        'views/pos_sentinel_menuitem.xml',
+    ],
+    'assets': {
+        'point_of_sale._assets_pos': [
+            'pos_sentinel/static/src/js/**/*',
+            'pos_sentinel/static/src/xml/**/*',
+            'pos_sentinel/static/src/css/**/*',
+        ],
+    },
+    'images': [
+        'static/description/banner.png',
+    ],
+    'installable': True,
+    'auto_install': False,
+    'application': True,
+    'sequence': 200,
+}

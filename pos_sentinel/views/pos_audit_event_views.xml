@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- List View -->
+    <record id="view_pos_audit_event_list" model="ir.ui.view">
+        <field name="name">pos.audit.event.list</field>
+        <field name="model">pos.audit.event</field>
+        <field name="arch" type="xml">
+            <list create="0" edit="0" delete="0" export_xlsx="1"
+                  decoration-danger="risk_level in ('high', 'critical')"
+                  decoration-warning="risk_level == 'medium'"
+                  decoration-muted="risk_level == 'none'">
+                <field name="create_date" string="Date"/>
+                <field name="event_type"/>
+                <field name="user_id"/>
+                <field name="pos_config_id" optional="show"/>
+                <field name="pos_session_id" optional="hide"/>
+                <field name="pos_order_id" optional="show"/>
+                <field name="product_id" optional="show"/>
+                <field name="amount" optional="show"/>
+                <field name="risk_level"
+                       widget="badge"
+                       decoration-danger="risk_level in ('high', 'critical')"
+                       decoration-warning="risk_level == 'medium'"
+                       decoration-info="risk_level == 'low'"
+                       decoration-muted="risk_level == 'none'"/>
+                <field name="risk_score" optional="hide"/>
+                <field name="is_tampered" optional="hide"
+                       widget="boolean"
+                       decoration-danger="is_tampered == True"/>
+                <field name="company_id" optional="hide"
+                       groups="base.group_multi_company"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_pos_audit_event_form" model="ir.ui.view">
+        <field name="name">pos.audit.event.form</field>
+        <field name="model">pos.audit.event</field>
+        <field name="arch" type="xml">
+            <form create="0" edit="0" delete="0">
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="%(point_of_sale.action_pos_pos_form)d"
+                                type="action"
+                                class="oe_stat_button"
+                                icon="fa-shopping-cart"
+                                invisible="not pos_order_id"
+                                context="{'search_default_id': pos_order_id}">
+                            <span>POS Order</span>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="display_name"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Event">
+                            <field name="event_type"/>
+                            <field name="create_date" string="Timestamp"/>
+                            <field name="user_id"/>
+                            <field name="employee_id"/>
+                        </group>
+                        <group string="POS Context">
+                            <field name="pos_config_id"/>
+                            <field name="pos_session_id"/>
+                            <field name="pos_order_id"/>
+                            <field name="product_id"/>
+                            <field name="amount"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Risk Assessment">
+                            <field name="risk_level" widget="badge"
+                                   decoration-danger="risk_level in ('high', 'critical')"
+                                   decoration-warning="risk_level == 'medium'"
+                                   decoration-info="risk_level == 'low'"/>
+                            <field name="risk_score"/>
+                        </group>
+                        <group string="Integrity">
+                            <field name="hash"/>
+                            <field name="is_tampered" widget="boolean"
+                                   decoration-danger="is_tampered == True"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Event Details" name="details">
+                            <field name="details" widget="ace" options="{'mode': 'json'}"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="view_pos_audit_event_search" model="ir.ui.view">
+        <field name="name">pos.audit.event.search</field>
+        <field name="model">pos.audit.event</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="user_id"/>
+                <field name="event_type"/>
+                <field name="pos_config_id"/>
+                <field name="pos_session_id"/>
+                <field name="pos_order_id"/>
+                <field name="product_id"/>
+                <separator/>
+                <filter name="filter_today" string="Today"
+                        domain="[('create_date', '>=', datetime.datetime.combine(context_today(), datetime.time(0,0,0)))]"/>
+                <filter name="filter_this_week" string="This Week"
+                        domain="[('create_date', '>=', (context_today() - datetime.timedelta(days=context_today().weekday())).strftime('%Y-%m-%d'))]"/>
+                <filter name="filter_this_month" string="This Month"
+                        domain="[('create_date', '>=', context_today().strftime('%Y-%m-01'))]"/>
+                <separator/>
+                <filter name="filter_critical" string="Critical"
+                        domain="[('risk_level', '=', 'critical')]"/>
+                <filter name="filter_high" string="High Risk"
+                        domain="[('risk_level', '=', 'high')]"/>
+                <filter name="filter_medium" string="Medium Risk"
+                        domain="[('risk_level', '=', 'medium')]"/>
+                <filter name="filter_risky" string="All Risky"
+                        domain="[('risk_level', 'in', ('medium', 'high', 'critical'))]"/>
+                <separator/>
+                <filter name="filter_tampered" string="Tampered"
+                        domain="[('is_tampered', '=', True)]"/>
+                <separator/>
+                <filter name="filter_voids" string="Voids"
+                        domain="[('event_type', '=', 'void_line')]"/>
+                <filter name="filter_refunds" string="Refunds"
+                        domain="[('event_type', '=', 'refund')]"/>
+                <filter name="filter_price_override" string="Price Overrides"
+                        domain="[('event_type', '=', 'price_override')]"/>
+                <filter name="filter_discounts" string="Discounts"
+                        domain="[('event_type', '=', 'discount')]"/>
+                <filter name="filter_cash" string="Cash Movements"
+                        domain="[('event_type', 'in', ('cash_in', 'cash_out'))]"/>
+                <separator/>
+                <group expand="0" string="Group By">
+                    <filter name="group_event_type" string="Event Type"
+                            context="{'group_by': 'event_type'}"/>
+                    <filter name="group_risk_level" string="Risk Level"
+                            context="{'group_by': 'risk_level'}"/>
+                    <filter name="group_user" string="User"
+                            context="{'group_by': 'user_id'}"/>
+                    <filter name="group_pos_config" string="POS Config"
+                            context="{'group_by': 'pos_config_id'}"/>
+                    <filter name="group_session" string="Session"
+                            context="{'group_by': 'pos_session_id'}"/>
+                    <filter name="group_date" string="Date"
+                            context="{'group_by': 'create_date:day'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_pos_audit_event" model="ir.actions.act_window">
+        <field name="name">POS Audit Events</field>
+        <field name="res_model">pos.audit.event</field>
+        <field name="view_mode">list,form,pivot,graph</field>
+        <field name="search_view_id" ref="view_pos_audit_event_search"/>
+        <field name="context">{'search_default_filter_today': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No audit events recorded yet
+            </p>
+            <p>
+                POS Sentinel automatically captures events from your Point of Sale
+                operations. Events will appear here once POS sessions are active.
+            </p>
+        </field>
+    </record>
+
+    <!-- Pivot View -->
+    <record id="view_pos_audit_event_pivot" model="ir.ui.view">
+        <field name="name">pos.audit.event.pivot</field>
+        <field name="model">pos.audit.event</field>
+        <field name="arch" type="xml">
+            <pivot>
+                <field name="create_date" type="row" interval="day"/>
+                <field name="event_type" type="col"/>
+                <field name="risk_score" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- Graph View -->
+    <record id="view_pos_audit_event_graph" model="ir.ui.view">
+        <field name="name">pos.audit.event.graph</field>
+        <field name="model">pos.audit.event</field>
+        <field name="arch" type="xml">
+            <graph type="bar">
+                <field name="event_type"/>
+                <field name="risk_score" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+</odoo>
