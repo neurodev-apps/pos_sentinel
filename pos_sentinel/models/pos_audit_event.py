@@ -287,6 +287,41 @@ class PosAuditEvent(models.Model):
             _logger.critical("POS Sentinel: failed to create audit event: %s", e)
             return self.env['pos.audit.event']
 
+    # ── Batch event logging (called from OWL frontend) ─────────
+
+    @api.model
+    def log_events_batch(self, events):
+        """Receive a batch of events from the POS frontend Shadow Logger.
+
+        Called via orm.call() from the sentinel_service.js. Each event
+        is a dict with keys matching create_event() vals.
+
+        Args:
+            events: list of dicts with keys:
+                - event_type (str, required)
+                - pos_session_id, pos_order_id, pos_config_id (int|False)
+                - product_id, employee_id (int|False)
+                - amount (float)
+                - details (dict)
+
+        Returns:
+            dict with 'created' count.
+        """
+        created = 0
+        for event_data in events:
+            event_type = event_data.get('event_type')
+            if not event_type:
+                continue
+            try:
+                self.create_event(event_type, event_data)
+                created += 1
+            except Exception as e:
+                _logger.warning(
+                    "POS Sentinel: failed to log event %s: %s",
+                    event_type, e,
+                )
+        return {'created': created}
+
     # ── Integrity verification cron ──────────────────────────────
 
     @api.model
