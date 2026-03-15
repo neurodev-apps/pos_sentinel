@@ -260,11 +260,33 @@ class PosAuditEvent(models.Model):
             'amount': vals.get('amount', 0.0),
             'currency_id': vals.get('currency_id', self.env.company.currency_id.id),
             'details': details_json,
-            'risk_score': vals.get('risk_score', 0.0),
-            'risk_level': vals.get('risk_level', 'none'),
             'company_id': vals.get('company_id', self.env.company.id),
-            'hash': '',
         }
+
+        # ── Compute risk score via Neuro-Scoring Engine ──────────
+        if 'risk_score' in vals and 'risk_level' in vals:
+            # Explicit score provided (e.g. from tests)
+            create_vals['risk_score'] = vals['risk_score']
+            create_vals['risk_level'] = vals['risk_level']
+        else:
+            try:
+                scoring = self.env['pos.scoring.engine'].compute_risk(
+                    event_type, {
+                        'amount': vals.get('amount', 0.0),
+                        'user_id': user_id,
+                        'pos_session_id': session_id,
+                    }
+                )
+                create_vals['risk_score'] = scoring['risk_score']
+                create_vals['risk_level'] = scoring['risk_level']
+            except Exception as e:
+                _logger.warning("POS Sentinel: scoring failed, defaulting to none: %s", e)
+                create_vals['risk_score'] = 0.0
+                create_vals['risk_level'] = 'none'
+
+        create_vals.update({
+            'hash': '',
+        })
 
         try:
             record = self.sudo().create(create_vals)

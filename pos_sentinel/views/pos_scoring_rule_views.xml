@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- List View -->
+    <record id="view_pos_scoring_rule_list" model="ir.ui.view">
+        <field name="name">pos.scoring.rule.list</field>
+        <field name="model">pos.scoring.rule</field>
+        <field name="arch" type="xml">
+            <list editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="event_type"/>
+                <field name="base_score"/>
+                <field name="amount_threshold" optional="show"/>
+                <field name="amount_multiplier" optional="show"/>
+                <field name="frequency_window_minutes" optional="hide"/>
+                <field name="frequency_threshold" optional="hide"/>
+                <field name="frequency_multiplier" optional="hide"/>
+                <field name="after_hours_multiplier" optional="hide"/>
+                <field name="active"/>
+                <field name="company_id" groups="base.group_multi_company" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_pos_scoring_rule_form" model="ir.ui.view">
+        <field name="name">pos.scoring.rule.form</field>
+        <field name="model">pos.scoring.rule</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="e.g. Void Line - High Amount"/></h1>
+                    </div>
+                    <group>
+                        <group string="Trigger">
+                            <field name="event_type"/>
+                            <field name="base_score"/>
+                            <field name="sequence"/>
+                            <field name="active"/>
+                        </group>
+                        <group string="Scope">
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Amount Condition" name="amount">
+                            <group>
+                                <field name="amount_threshold"/>
+                                <field name="amount_multiplier"/>
+                            </group>
+                            <p class="text-muted">
+                                If the event amount exceeds the threshold, the base score
+                                is multiplied by the amount multiplier. Set threshold to 0
+                                to disable.
+                            </p>
+                        </page>
+                        <page string="Frequency Condition" name="frequency">
+                            <group>
+                                <field name="frequency_window_minutes"/>
+                                <field name="frequency_threshold"/>
+                                <field name="frequency_multiplier"/>
+                            </group>
+                            <p class="text-muted">
+                                Counts how many events of the same type were created by the
+                                same user in the time window. If the count exceeds the threshold,
+                                the base score is multiplied. Set window to 0 to disable.
+                            </p>
+                        </page>
+                        <page string="After-Hours Condition" name="after_hours">
+                            <group>
+                                <field name="business_hours_start" widget="float_time"/>
+                                <field name="business_hours_end" widget="float_time"/>
+                                <field name="after_hours_multiplier"/>
+                            </group>
+                            <p class="text-muted">
+                                If the event occurs outside business hours, the score is
+                                multiplied. Set multiplier to 1.0 to disable.
+                            </p>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_pos_scoring_rule" model="ir.actions.act_window">
+        <field name="name">Scoring Rules</field>
+        <field name="res_model">pos.scoring.rule</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first scoring rule
+            </p>
+            <p>
+                Scoring rules define how risk scores are calculated for each
+                type of POS event. Configure base scores and conditional
+                multipliers for amount, frequency, and after-hours triggers.
+            </p>
+        </field>
+    </record>
+
+</odoo>

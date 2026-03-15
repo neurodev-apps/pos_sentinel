@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data noupdate="1">
+
+    <!-- ═══════════════════════════════════════════════════════════
+         Default Scoring Rules — sensible defaults out of the box.
+         Users can customize via Settings > POS Sentinel > Scoring Rules.
+         ═══════════════════════════════════════════════════════════ -->
+
+    <!-- Risk thresholds (ICP) -->
+    <record id="param_threshold_low" model="ir.config_parameter">
+        <field name="key">pos_sentinel.threshold_low</field>
+        <field name="value">10</field>
+    </record>
+    <record id="param_threshold_medium" model="ir.config_parameter">
+        <field name="key">pos_sentinel.threshold_medium</field>
+        <field name="value">30</field>
+    </record>
+    <record id="param_threshold_high" model="ir.config_parameter">
+        <field name="key">pos_sentinel.threshold_high</field>
+        <field name="value">60</field>
+    </record>
+    <record id="param_threshold_critical" model="ir.config_parameter">
+        <field name="key">pos_sentinel.threshold_critical</field>
+        <field name="value">85</field>
+    </record>
+
+    <!-- ── Line Voids ────────────────────────────────────────── -->
+    <record id="rule_void_line" model="pos.scoring.rule">
+        <field name="name">Line Void</field>
+        <field name="event_type">void_line</field>
+        <field name="base_score">15</field>
+        <field name="sequence">10</field>
+        <field name="amount_threshold">50000</field>
+        <field name="amount_multiplier">2.0</field>
+        <field name="frequency_window_minutes">60</field>
+        <field name="frequency_threshold">5</field>
+        <field name="frequency_multiplier">2.0</field>
+    </record>
+
+    <!-- ── Price Overrides ───────────────────────────────────── -->
+    <record id="rule_price_override" model="pos.scoring.rule">
+        <field name="name">Price Override</field>
+        <field name="event_type">price_override</field>
+        <field name="base_score">20</field>
+        <field name="sequence">20</field>
+        <field name="amount_threshold">100000</field>
+        <field name="amount_multiplier">2.5</field>
+        <field name="frequency_window_minutes">30</field>
+        <field name="frequency_threshold">3</field>
+        <field name="frequency_multiplier">2.0</field>
+    </record>
+
+    <!-- ── Discounts ─────────────────────────────────────────── -->
+    <record id="rule_discount" model="pos.scoring.rule">
+        <field name="name">Discount Applied</field>
+        <field name="event_type">discount</field>
+        <field name="base_score">12</field>
+        <field name="sequence">30</field>
+        <field name="amount_threshold">20000</field>
+        <field name="amount_multiplier">2.0</field>
+        <field name="frequency_window_minutes">60</field>
+        <field name="frequency_threshold">8</field>
+        <field name="frequency_multiplier">1.5</field>
+    </record>
+
+    <!-- ── Refunds ───────────────────────────────────────────── -->
+    <record id="rule_refund" model="pos.scoring.rule">
+        <field name="name">Refund</field>
+        <field name="event_type">refund</field>
+        <field name="base_score">25</field>
+        <field name="sequence">40</field>
+        <field name="amount_threshold">200000</field>
+        <field name="amount_multiplier">2.0</field>
+        <field name="frequency_window_minutes">120</field>
+        <field name="frequency_threshold">3</field>
+        <field name="frequency_multiplier">2.5</field>
+    </record>
+
+    <!-- ── Cash Movements ────────────────────────────────────── -->
+    <record id="rule_cash_out" model="pos.scoring.rule">
+        <field name="name">Cash Out</field>
+        <field name="event_type">cash_out</field>
+        <field name="base_score">20</field>
+        <field name="sequence">50</field>
+        <field name="amount_threshold">100000</field>
+        <field name="amount_multiplier">2.0</field>
+        <field name="frequency_window_minutes">60</field>
+        <field name="frequency_threshold">3</field>
+        <field name="frequency_multiplier">2.0</field>
+    </record>
+
+    <record id="rule_cash_in" model="pos.scoring.rule">
+        <field name="name">Cash In</field>
+        <field name="event_type">cash_in</field>
+        <field name="base_score">5</field>
+        <field name="sequence">55</field>
+    </record>
+
+    <!-- ── Order Deletion ────────────────────────────────────── -->
+    <record id="rule_order_delete" model="pos.scoring.rule">
+        <field name="name">Order Deleted</field>
+        <field name="event_type">order_delete</field>
+        <field name="base_score">30</field>
+        <field name="sequence">60</field>
+        <field name="amount_threshold">50000</field>
+        <field name="amount_multiplier">2.0</field>
+        <field name="frequency_window_minutes">60</field>
+        <field name="frequency_threshold">3</field>
+        <field name="frequency_multiplier">2.5</field>
+    </record>
+
+    <!-- ── Negative Quantity ─────────────────────────────────── -->
+    <record id="rule_negative_qty" model="pos.scoring.rule">
+        <field name="name">Negative Quantity</field>
+        <field name="event_type">negative_qty</field>
+        <field name="base_score">20</field>
+        <field name="sequence">70</field>
+    </record>
+
+    <!-- ── Quantity Change ───────────────────────────────────── -->
+    <record id="rule_qty_change" model="pos.scoring.rule">
+        <field name="name">Quantity Changed</field>
+        <field name="event_type">line_qty_change</field>
+        <field name="base_score">5</field>
+        <field name="sequence">80</field>
+        <field name="frequency_window_minutes">30</field>
+        <field name="frequency_threshold">15</field>
+        <field name="frequency_multiplier">3.0</field>
+    </record>
+
+    <!-- ── Payment Changes ───────────────────────────────────── -->
+    <record id="rule_payment_change" model="pos.scoring.rule">
+        <field name="name">Payment Modified</field>
+        <field name="event_type">payment_change</field>
+        <field name="base_score">10</field>
+        <field name="sequence">90</field>
+        <field name="frequency_window_minutes">30</field>
+        <field name="frequency_threshold">5</field>
+        <field name="frequency_multiplier">2.0</field>
+    </record>
+
+    <!-- ── Order Complete (low risk, informational) ──────────── -->
+    <record id="rule_order_complete" model="pos.scoring.rule">
+        <field name="name">Order Completed</field>
+        <field name="event_type">order_complete</field>
+        <field name="base_score">0</field>
+        <field name="sequence">100</field>
+    </record>
+
+    <!-- ── Session Events (informational) ────────────────────── -->
+    <record id="rule_session_open" model="pos.scoring.rule">
+        <field name="name">Session Opened</field>
+        <field name="event_type">session_open</field>
+        <field name="base_score">0</field>
+        <field name="sequence">110</field>
+        <field name="after_hours_multiplier">3.0</field>
+        <field name="business_hours_start">7</field>
+        <field name="business_hours_end">23</field>
+    </record>
+
+    <record id="rule_session_close" model="pos.scoring.rule">
+        <field name="name">Session Closed</field>
+        <field name="event_type">session_close</field>
+        <field name="base_score">0</field>
+        <field name="sequence">120</field>
+    </record>
+
+</data>
+</odoo>

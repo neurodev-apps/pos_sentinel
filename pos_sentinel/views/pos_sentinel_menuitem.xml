@@ -15,4 +15,18 @@
               action="action_pos_audit_event"
               sequence="10"/>
 
+    <!-- Configuration submenu -->
+    <menuitem id="menu_pos_sentinel_config"
+              name="Configuration"
+              parent="menu_pos_sentinel_root"
+              sequence="90"
+              groups="pos_sentinel.group_pos_security_manager"/>
+
+    <!-- Scoring Rules -->
+    <menuitem id="menu_pos_scoring_rules"
+              name="Scoring Rules"
+              parent="menu_pos_sentinel_config"
+              action="action_pos_scoring_rule"
+              sequence="10"/>
+
 </odoo>

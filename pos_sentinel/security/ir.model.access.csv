@@ -1,3 +1,5 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_pos_audit_event_auditor,pos.audit.event.auditor,model_pos_audit_event,pos_sentinel.group_pos_auditor,1,0,0,0
 access_pos_audit_event_manager,pos.audit.event.manager,model_pos_audit_event,pos_sentinel.group_pos_security_manager,1,0,0,0
+access_pos_scoring_rule_auditor,pos.scoring.rule.auditor,model_pos_scoring_rule,pos_sentinel.group_pos_auditor,1,0,0,0
+access_pos_scoring_rule_manager,pos.scoring.rule.manager,model_pos_scoring_rule,pos_sentinel.group_pos_security_manager,1,1,1,1

@@ -51,7 +51,9 @@ Security
         'security/pos_sentinel_security.xml',
         'security/ir.model.access.csv',
         'data/pos_sentinel_data.xml',
+        'data/pos_sentinel_scoring_rules.xml',
         'views/pos_audit_event_views.xml',
+        'views/pos_scoring_rule_views.xml',
         'views/pos_sentinel_menuitem.xml',
     ],
     'assets': {
