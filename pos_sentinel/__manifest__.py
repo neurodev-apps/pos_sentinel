@@ -55,6 +55,9 @@ Security
         'views/pos_audit_event_views.xml',
         'views/pos_scoring_rule_views.xml',
         'views/pos_sentinel_menuitem.xml',
+        'views/pos_sentinel_report_wizard_views.xml',
+        'report/pos_sentinel_report.xml',
+        'report/pos_sentinel_report_template.xml',
     ],
     'assets': {
         'point_of_sale._assets_pos': [

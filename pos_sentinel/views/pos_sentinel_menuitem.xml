@@ -42,4 +42,11 @@
               action="action_pos_scoring_rule"
               sequence="10"/>
 
+    <!-- Reports -->
+    <menuitem id="menu_pos_sentinel_report"
+              name="Generate Report"
+              parent="menu_pos_sentinel_root"
+              action="action_pos_sentinel_report_wizard"
+              sequence="20"/>
+
 </odoo>

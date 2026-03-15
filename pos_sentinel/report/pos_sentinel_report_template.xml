@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <template id="report_sentinel_pdf_template">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="wizard">
+                <t t-set="d" t-value="report_data"/>
+                <t t-call="web.external_layout">
+                    <div class="page">
+
+                        <!-- Title -->
+                        <h2 class="text-center mb-4">
+                            <strong>POS Sentinel — Audit Report</strong>
+                        </h2>
+
+                        <!-- Meta info -->
+                        <div class="row mb-4">
+                            <div class="col-6">
+                                <table class="table table-sm table-borderless" style="width: auto;">
+                                    <tr>
+                                        <td class="fw-bold">Company:</td>
+                                        <td><t t-esc="d.get('company_name', '')"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">Period:</td>
+                                        <td>
+                                            <t t-esc="d.get('date_from', '')"/> —
+                                            <t t-esc="d.get('date_to', '')"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="fw-bold">Risk Filter:</td>
+                                        <td><t t-esc="d.get('risk_filter', 'All')"/></td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-6 text-end">
+                                <div class="p-3 border rounded" style="display: inline-block;">
+                                    <div style="font-size: 2em; font-weight: bold; color: #875A7B;">
+                                        <t t-esc="d.get('total', 0)"/>
+                                    </div>
+                                    <div class="text-muted">Total Events</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tampered warning -->
+                        <t t-if="d.get('tampered', 0) > 0">
+                            <div class="alert alert-danger text-center mb-4" role="alert">
+                                <strong>⚠ INTEGRITY ALERT:</strong>
+                                <t t-esc="d.get('tampered', 0)"/> records with tampered integrity hash detected.
+                            </div>
+                        </t>
+
+                        <!-- Summary by Risk Level -->
+                        <h4 class="mt-4 mb-3" style="color: #875A7B; border-bottom: 2px solid #875A7B; padding-bottom: 5px;">
+                            Events by Risk Level
+                        </h4>
+                        <table class="table table-sm table-striped">
+                            <thead>
+                                <tr class="table-dark">
+                                    <th>Risk Level</th>
+                                    <th class="text-end">Count</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="d.get('by_risk', [])" t-as="item">
+                                    <tr>
+                                        <td>
+                                            <t t-if="item[0] == 'Critical'">
+                                                <span class="badge bg-danger"><t t-esc="item[0]"/></span>
+                                            </t>
+                                            <t t-elif="item[0] == 'High'">
+                                                <span class="badge bg-warning text-dark"><t t-esc="item[0]"/></span>
+                                            </t>
+                                            <t t-elif="item[0] == 'Medium'">
+                                                <span class="badge bg-info text-dark"><t t-esc="item[0]"/></span>
+                                            </t>
+                                            <t t-else="">
+                                                <span class="badge bg-secondary"><t t-esc="item[0]"/></span>
+                                            </t>
+                                        </td>
+                                        <td class="text-end"><t t-esc="item[1]"/></td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+
+                        <!-- Summary by Event Type -->
+                        <h4 class="mt-4 mb-3" style="color: #875A7B; border-bottom: 2px solid #875A7B; padding-bottom: 5px;">
+                            Events by Type
+                        </h4>
+                        <table class="table table-sm table-striped">
+                            <thead>
+                                <tr class="table-dark">
+                                    <th>Event Type</th>
+                                    <th class="text-end">Count</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="d.get('by_type', [])" t-as="item">
+                                    <tr>
+                                        <td><t t-esc="item[0]"/></td>
+                                        <td class="text-end"><t t-esc="item[1]"/></td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+
+                        <!-- Summary by User -->
+                        <h4 class="mt-4 mb-3" style="color: #875A7B; border-bottom: 2px solid #875A7B; padding-bottom: 5px;">
+                            Events by User
+                        </h4>
+                        <table class="table table-sm table-striped">
+                            <thead>
+                                <tr class="table-dark">
+                                    <th>User</th>
+                                    <th class="text-end">Events</th>
+                                    <th class="text-end">Total Risk Score</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="d.get('by_user', [])" t-as="item">
+                                    <tr>
+                                        <td><t t-esc="item[0]"/></td>
+                                        <td class="text-end"><t t-esc="item[1]"/></td>
+                                        <td class="text-end"><t t-esc="item[2]"/></td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+
+                        <!-- Footer -->
+                        <div class="text-center text-muted mt-5" style="font-size: 0.85em;">
+                            Generated by POS Sentinel — Behavioral Fraud Detection
+                        </div>
+
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+</odoo>
