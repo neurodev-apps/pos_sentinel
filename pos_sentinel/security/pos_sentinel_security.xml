@@ -46,14 +46,22 @@
     </record>
 
     <record id="rule_pos_audit_event_company_manager" model="ir.rule">
-        <field name="name">POS Audit Event: Full Access (Security Manager)</field>
+        <field name="name">POS Audit Event: Company Access (Security Manager)</field>
         <field name="model_id" ref="model_pos_audit_event"/>
-        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
         <field name="groups" eval="[(4, ref('group_pos_security_manager'))]"/>
         <field name="perm_read" eval="True"/>
         <field name="perm_write" eval="False"/>
         <field name="perm_create" eval="False"/>
         <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <!-- Record Rules: scoring rules multi-company -->
+    <record id="rule_pos_scoring_rule_company" model="ir.rule">
+        <field name="name">POS Scoring Rule: Company Access</field>
+        <field name="model_id" ref="model_pos_scoring_rule"/>
+        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="groups" eval="[(4, ref('group_pos_auditor'))]"/>
     </record>
 
 </data>

@@ -77,25 +77,27 @@ class TestPosAuditEvent(TransactionCase):
         with self.assertRaises(UserError):
             event.write({'hash': 'tampered_hash_value'})
 
-    def test_hash_update_with_context_allowed(self):
-        """Hash write with _sentinel_hash_update context must succeed."""
+    def test_hash_update_via_internal_method(self):
+        """Hash write via _write_hash() internal method must succeed."""
         event = self._create_test_event()
-        original_hash = event.hash
-        # This simulates the internal hash-setting mechanism
-        event.with_context(_sentinel_hash_update=True).write({
-            'hash': 'a' * 64,
-        })
+        event._write_hash('a' * 64)
         event.invalidate_recordset()
         self.assertEqual(event.hash, 'a' * 64)
 
-    def test_tampered_flag_with_context_allowed(self):
-        """is_tampered write with _sentinel_integrity_check context must succeed."""
+    def test_tampered_flag_via_internal_method(self):
+        """is_tampered write via _mark_tampered() must succeed."""
         event = self._create_test_event()
-        event.with_context(_sentinel_integrity_check=True).write({
-            'is_tampered': True,
-        })
+        event._mark_tampered()
         event.invalidate_recordset()
         self.assertTrue(event.is_tampered)
+
+    def test_context_flag_without_token_rejected(self):
+        """Write with old context flags (no token) must be rejected."""
+        event = self._create_test_event()
+        with self.assertRaises(UserError):
+            event.with_context(_sentinel_hash_update=True).write({
+                'hash': 'fake',
+            })
 
     # ── Event Types ──────────────────────────────────────────────
 

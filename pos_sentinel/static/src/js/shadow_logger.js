@@ -33,8 +33,8 @@ function sentinel() {
 function ctx(obj) {
     try {
         return {
-            pos_session_id: obj.session?.id || false,
-            pos_config_id: obj.config?.id || false,
+            pos_session_id: obj.session?.id ?? false,
+            pos_config_id: obj.config?.id ?? false,
         };
     } catch {
         return { pos_session_id: false, pos_config_id: false };
@@ -101,16 +101,15 @@ patch(PosOrder.prototype, {
     addPaymentline(payment_method) {
         const result = super.addPaymentline(...arguments);
         const s = sentinel();
-        if (s && result?.status) {
+        if (s) {
             try {
                 s.logEvent("payment_change", {
                     ...ctx(this),
                     pos_order_id: this.id || false,
-                    amount: result.data?.amount || 0,
+                    amount: 0,
                     details: {
                         action: "add_payment",
                         payment_method: payment_method?.name || "",
-                        amount: result.data?.amount || 0,
                         order_name: this.name || "",
                     },
                 });
@@ -223,7 +222,7 @@ patch(PosOrderline.prototype, {
 // ─── PosStore patches (has env.services) ─────────────────────────
 patch(PosStore.prototype, {
     /**
-     * Capture: order deletion
+     * Capture: order deletion (batch)
      */
     async deleteOrders(orders, serverIds = [], ignoreChange = false) {
         const s = this.env?.services?.pos_sentinel || sentinel();
@@ -231,15 +230,14 @@ patch(PosStore.prototype, {
             for (const order of orders) {
                 try {
                     s.logEvent("order_delete", {
-                        pos_session_id: this.session?.id || false,
-                        pos_config_id: this.config?.id || false,
+                        pos_session_id: this.session?.id ?? false,
+                        pos_config_id: this.config?.id ?? false,
                         pos_order_id: order.id || false,
-                        amount: order.prices?.totalWithTax || 0,
+                        amount: order.priceIncl || 0,
                         details: {
                             order_name: order.name || "",
                             line_count: order.lines?.length || 0,
                             state: order.state || "",
-                            is_synced: order.isSynced || false,
                             partner: order.partner_id?.name || "",
                         },
                     });
@@ -253,27 +251,26 @@ patch(PosStore.prototype, {
 
     /**
      * Capture: cash in / cash out
+     * Note: cashMove() opens a popup that doesn't return payload data,
+     * so we log the event occurrence without specific amount.
      */
     async cashMove() {
-        const result = await super.cashMove(...arguments);
         const s = this.env?.services?.pos_sentinel || sentinel();
-        if (s && result) {
+        if (s) {
             try {
-                const eventType = result.amount >= 0 ? "cash_in" : "cash_out";
-                s.logEvent(eventType, {
-                    pos_session_id: this.session?.id || false,
-                    pos_config_id: this.config?.id || false,
-                    amount: Math.abs(result.amount || 0),
+                s.logEvent("cash_out", {
+                    pos_session_id: this.session?.id ?? false,
+                    pos_config_id: this.config?.id ?? false,
+                    amount: 0,
                     details: {
-                        reason: result.reason || "",
-                        amount: result.amount || 0,
+                        action: "cash_move_initiated",
                     },
                 });
             } catch (e) {
                 console.warn("[POS Sentinel] cash_move error:", e);
             }
         }
-        return result;
+        return await super.cashMove(...arguments);
     },
 
     /**
@@ -284,8 +281,8 @@ patch(PosStore.prototype, {
         if (s) {
             try {
                 s.logEvent("session_close", {
-                    pos_session_id: this.session?.id || false,
-                    pos_config_id: this.config?.id || false,
+                    pos_session_id: this.session?.id ?? false,
+                    pos_config_id: this.config?.id ?? false,
                     details: {
                         session_name: this.session?.name || "",
                         cashier: this.getCashier?.()?.name || "",
@@ -300,32 +297,28 @@ patch(PosStore.prototype, {
     },
 });
 
-// ─── PaymentScreen patches (has env.services via this.pos.env) ───
+// ─── PaymentScreen patches ───────────────────────────────────────
 patch(PaymentScreen.prototype, {
     /**
      * Capture: order validation (payment completed / refund)
      */
     async validateOrder(isForceValidate = false) {
-        const s = this.pos?.env?.services?.pos_sentinel || sentinel();
-        const order = this.pos?.getOrder?.();
+        const s = this.env?.services?.pos_sentinel || sentinel();
+        const order = this.currentOrder;
         if (s && order) {
             try {
                 const isRefund = order.isRefund;
                 s.logEvent(isRefund ? "refund" : "order_complete", {
-                    pos_session_id: order.session?.id || false,
-                    pos_config_id: order.config?.id || false,
+                    pos_session_id: order.session?.id ?? false,
+                    pos_config_id: order.config?.id ?? false,
                     pos_order_id: order.id || false,
-                    amount: order.prices?.totalWithTax || 0,
+                    amount: order.priceIncl || 0,
                     details: {
                         order_name: order.name || "",
                         line_count: order.lines?.length || 0,
-                        total: order.prices?.totalWithTax || 0,
-                        is_refund: isRefund,
+                        total: order.priceIncl || 0,
+                        is_refund: isRefund || false,
                         partner: order.partner_id?.name || "",
-                        payment_methods: order.payment_ids?.map((p) => ({
-                            method: p.payment_method_id?.name || "",
-                            amount: p.amount || 0,
-                        })) || [],
                         force_validate: isForceValidate,
                     },
                 });
@@ -336,5 +329,3 @@ patch(PaymentScreen.prototype, {
         return await super.validateOrder(...arguments);
     },
 });
-
-console.log("[POS Sentinel] Shadow Logger active — monitoring POS events");

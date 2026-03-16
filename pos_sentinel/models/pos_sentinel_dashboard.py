@@ -17,6 +17,7 @@ class PosSentinelDashboard(models.AbstractModel):
         """Single RPC call to provide all dashboard data.
 
         Uses raw SQL for performance on large datasets.
+        All queries are company-scoped to prevent multi-company data leaks.
 
         Args:
             date_from: ISO date string (default: 30 days ago)
@@ -36,18 +37,20 @@ class PosSentinelDashboard(models.AbstractModel):
         else:
             dt_to = now
 
+        company_ids = self.env.companies.ids
+
         return {
-            'summary': self._get_summary(dt_from, dt_to),
-            'by_type': self._get_events_by_type(dt_from, dt_to),
-            'by_risk': self._get_events_by_risk(dt_from, dt_to),
-            'by_day': self._get_events_by_day(dt_from, dt_to),
-            'by_user': self._get_events_by_user(dt_from, dt_to),
-            'top_products': self._get_top_products(dt_from, dt_to),
+            'summary': self._get_summary(dt_from, dt_to, company_ids),
+            'by_type': self._get_events_by_type(dt_from, dt_to, company_ids),
+            'by_risk': self._get_events_by_risk(dt_from, dt_to, company_ids),
+            'by_day': self._get_events_by_day(dt_from, dt_to, company_ids),
+            'by_user': self._get_events_by_user(dt_from, dt_to, company_ids),
+            'top_products': self._get_top_products(dt_from, dt_to, company_ids),
             'integrity': self._get_integrity_status(),
-            'recent_critical': self._get_recent_critical(dt_from, dt_to),
+            'recent_critical': self._get_recent_critical(dt_from, dt_to, company_ids),
         }
 
-    def _get_summary(self, dt_from, dt_to):
+    def _get_summary(self, dt_from, dt_to, company_ids):
         """Summary cards: total events, by risk level, tampered count."""
         self.env.cr.execute("""
             SELECT
@@ -61,28 +64,30 @@ class PosSentinelDashboard(models.AbstractModel):
                 COALESCE(AVG(risk_score), 0) AS avg_score
             FROM pos_audit_event
             WHERE create_date BETWEEN %s AND %s
-        """, (dt_from, dt_to))
-        row = self.env.cr.dictfetchone()
-        return row
+              AND company_id IN %s
+        """, (dt_from, dt_to, tuple(company_ids)))
+        return self.env.cr.dictfetchone()
 
-    def _get_events_by_type(self, dt_from, dt_to):
+    def _get_events_by_type(self, dt_from, dt_to, company_ids):
         """Events grouped by event_type for doughnut chart."""
         self.env.cr.execute("""
             SELECT event_type, COUNT(*) AS count
             FROM pos_audit_event
             WHERE create_date BETWEEN %s AND %s
+              AND company_id IN %s
             GROUP BY event_type
             ORDER BY count DESC
-        """, (dt_from, dt_to))
+        """, (dt_from, dt_to, tuple(company_ids)))
         return self.env.cr.dictfetchall()
 
-    def _get_events_by_risk(self, dt_from, dt_to):
+    def _get_events_by_risk(self, dt_from, dt_to, company_ids):
         """Events grouped by risk_level for horizontal bar chart."""
         self.env.cr.execute("""
             SELECT risk_level, COUNT(*) AS count,
                    COALESCE(AVG(risk_score), 0) AS avg_score
             FROM pos_audit_event
             WHERE create_date BETWEEN %s AND %s
+              AND company_id IN %s
             GROUP BY risk_level
             ORDER BY
                 CASE risk_level
@@ -92,24 +97,25 @@ class PosSentinelDashboard(models.AbstractModel):
                     WHEN 'low' THEN 4
                     ELSE 5
                 END
-        """, (dt_from, dt_to))
+        """, (dt_from, dt_to, tuple(company_ids)))
         return self.env.cr.dictfetchall()
 
-    def _get_events_by_day(self, dt_from, dt_to):
+    def _get_events_by_day(self, dt_from, dt_to, company_ids):
         """Events per day for line chart."""
         self.env.cr.execute("""
             SELECT
-                create_date::date AS day,
+                to_char(create_date::date, 'YYYY-MM-DD') AS day,
                 COUNT(*) AS total,
                 COUNT(*) FILTER (WHERE risk_level IN ('high', 'critical')) AS risky
             FROM pos_audit_event
             WHERE create_date BETWEEN %s AND %s
+              AND company_id IN %s
             GROUP BY create_date::date
-            ORDER BY day
-        """, (dt_from, dt_to))
+            ORDER BY create_date::date
+        """, (dt_from, dt_to, tuple(company_ids)))
         return self.env.cr.dictfetchall()
 
-    def _get_events_by_user(self, dt_from, dt_to):
+    def _get_events_by_user(self, dt_from, dt_to, company_ids):
         """Top 10 users by total risk score."""
         self.env.cr.execute("""
             SELECT
@@ -122,13 +128,14 @@ class PosSentinelDashboard(models.AbstractModel):
             JOIN res_users ru ON pae.user_id = ru.id
             LEFT JOIN res_partner rp ON ru.partner_id = rp.id
             WHERE pae.create_date BETWEEN %s AND %s
+              AND pae.company_id IN %s
             GROUP BY ru.id, ru.login, rp.name
             ORDER BY total_score DESC
             LIMIT 10
-        """, (dt_from, dt_to))
+        """, (dt_from, dt_to, tuple(company_ids)))
         return self.env.cr.dictfetchall()
 
-    def _get_top_products(self, dt_from, dt_to):
+    def _get_top_products(self, dt_from, dt_to, company_ids):
         """Top 10 products involved in risky events."""
         self.env.cr.execute("""
             SELECT
@@ -139,12 +146,13 @@ class PosSentinelDashboard(models.AbstractModel):
             JOIN product_product pp ON pae.product_id = pp.id
             JOIN product_template pt ON pp.product_tmpl_id = pt.id
             WHERE pae.create_date BETWEEN %s AND %s
+              AND pae.company_id IN %s
               AND pae.product_id IS NOT NULL
               AND pae.risk_score > 0
             GROUP BY pt.name
             ORDER BY total_score DESC
             LIMIT 10
-        """, (dt_from, dt_to))
+        """, (dt_from, dt_to, tuple(company_ids)))
         return self.env.cr.dictfetchall()
 
     def _get_integrity_status(self):
@@ -155,7 +163,7 @@ class PosSentinelDashboard(models.AbstractModel):
             'tampered_count': int(ICP.get_param('pos_sentinel.last_tampered_count', '0')),
         }
 
-    def _get_recent_critical(self, dt_from, dt_to):
+    def _get_recent_critical(self, dt_from, dt_to, company_ids):
         """Last 20 critical/high risk events for the activity feed."""
         self.env.cr.execute("""
             SELECT
@@ -171,12 +179,12 @@ class PosSentinelDashboard(models.AbstractModel):
             JOIN res_users ru ON pae.user_id = ru.id
             LEFT JOIN res_partner rp ON ru.partner_id = rp.id
             WHERE pae.create_date BETWEEN %s AND %s
+              AND pae.company_id IN %s
               AND pae.risk_level IN ('high', 'critical')
             ORDER BY pae.create_date DESC
             LIMIT 20
-        """, (dt_from, dt_to))
+        """, (dt_from, dt_to, tuple(company_ids)))
         rows = self.env.cr.dictfetchall()
-        # Convert datetimes to strings for JSON serialization
         for row in rows:
             if row.get('create_date'):
                 row['create_date'] = fields.Datetime.to_string(row['create_date'])
