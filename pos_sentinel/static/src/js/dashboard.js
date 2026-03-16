@@ -6,25 +6,30 @@ import { useService } from "@web/core/utils/hooks";
 import { loadBundle } from "@web/core/assets";
 import { _t } from "@web/core/l10n/translation";
 
-const EVENT_TYPE_LABELS = {
-    void_line: _t("Line Void"),
-    price_override: _t("Price Override"),
-    discount: _t("Discount"),
-    refund: _t("Refund"),
-    cash_in: _t("Cash In"),
-    cash_out: _t("Cash Out"),
-    order_delete: _t("Order Deleted"),
-    line_qty_change: _t("Qty Changed"),
-    payment_change: _t("Payment Modified"),
-    session_open: _t("Session Open"),
-    session_close: _t("Session Close"),
-    order_complete: _t("Order Complete"),
-    manual_price: _t("Manual Price"),
-    negative_qty: _t("Negative Qty"),
-    post_payment_edit: _t("Post-Payment Edit"),
-    sequence_gap: _t("Sequence Gap"),
-    other: _t("Other"),
+const EVENT_TYPE_KEYS = {
+    void_line: "Line Void",
+    price_override: "Price Override",
+    discount: "Discount",
+    refund: "Refund",
+    cash_in: "Cash In",
+    cash_out: "Cash Out",
+    order_delete: "Order Deleted",
+    line_qty_change: "Qty Changed",
+    payment_change: "Payment Modified",
+    session_open: "Session Open",
+    session_close: "Session Close",
+    order_complete: "Order Complete",
+    manual_price: "Manual Price",
+    negative_qty: "Negative Qty",
+    post_payment_edit: "Post-Payment Edit",
+    sequence_gap: "Sequence Gap",
+    other: "Other",
 };
+
+function getEventTypeLabel(type) {
+    const key = EVENT_TYPE_KEYS[type];
+    return key ? _t(key) : type;
+}
 
 const RISK_COLORS = {
     critical: "#DC3545",
@@ -186,7 +191,7 @@ export class PosSentinelDashboard extends Component {
         this.charts.byType = new Chart(el, {
             type: "doughnut",
             data: {
-                labels: data.map((d) => EVENT_TYPE_LABELS[d.event_type] || d.event_type),
+                labels: data.map((d) => getEventTypeLabel(d.event_type)),
                 datasets: [
                     {
                         data: data.map((d) => d.count),
@@ -287,7 +292,7 @@ export class PosSentinelDashboard extends Component {
     }
 
     getEventTypeLabel(type) {
-        return EVENT_TYPE_LABELS[type] || type;
+        return getEventTypeLabel(type);
     }
 
     getRiskBadgeClass(level) {

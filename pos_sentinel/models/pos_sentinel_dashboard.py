@@ -38,6 +38,13 @@ class PosSentinelDashboard(models.AbstractModel):
             dt_to = now
 
         company_ids = self.env.companies.ids
+        if not company_ids:
+            return {
+                'summary': {}, 'by_type': [], 'by_risk': [],
+                'by_day': [], 'by_user': [], 'top_products': [],
+                'integrity': self._get_integrity_status(),
+                'recent_critical': [],
+            }
 
         return {
             'summary': self._get_summary(dt_from, dt_to, company_ids),
@@ -158,9 +165,13 @@ class PosSentinelDashboard(models.AbstractModel):
     def _get_integrity_status(self):
         """Last integrity check results from ICP."""
         ICP = self.env['ir.config_parameter'].sudo()
+        try:
+            tampered_count = int(ICP.get_param('pos_sentinel.last_tampered_count', '0'))
+        except (ValueError, TypeError):
+            tampered_count = 0
         return {
             'last_check': ICP.get_param('pos_sentinel.last_integrity_check', ''),
-            'tampered_count': int(ICP.get_param('pos_sentinel.last_tampered_count', '0')),
+            'tampered_count': tampered_count,
         }
 
     def _get_recent_critical(self, dt_from, dt_to, company_ids):

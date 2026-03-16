@@ -116,6 +116,7 @@ class PosSentinelReportWizard(models.TransientModel):
                 params.append(risk_filter[2])
 
         base_where = f"WHERE create_date >= %s AND create_date <= %s AND company_id IN %s{risk_sql}"
+        qual_where = f"WHERE pae.create_date >= %s AND pae.create_date <= %s AND pae.company_id IN %s{risk_sql.replace('risk_level', 'pae.risk_level')}"
 
         # Summary by risk
         self.env.cr.execute(f"""
@@ -141,7 +142,7 @@ class PosSentinelReportWizard(models.TransientModel):
             FROM pos_audit_event pae
             JOIN res_users ru ON pae.user_id = ru.id
             LEFT JOIN res_partner rp ON ru.partner_id = rp.id
-            {base_where.replace('create_date', 'pae.create_date').replace('company_id', 'pae.company_id').replace('risk_level', 'pae.risk_level')}
+            {qual_where}
             GROUP BY rp.name, ru.login
             ORDER BY total_score DESC
         """, params)

@@ -363,6 +363,10 @@ class PosAuditEvent(models.Model):
         raw SQL for performance. Marks tampered records and persists
         results for the dashboard.
         """
+        company_ids = self.env.companies.ids
+        if not company_ids:
+            return
+
         date_from = fields.Datetime.now() - timedelta(days=7)
         salt = get_sentinel_salt(self.env)
 
@@ -371,8 +375,9 @@ class PosAuditEvent(models.Model):
                    create_date, details, hash
             FROM pos_audit_event
             WHERE create_date >= %s
+              AND company_id IN %s
             ORDER BY id ASC
-        """, (date_from,))
+        """, (date_from, tuple(company_ids)))
 
         total = 0
         tampered_ids = []
