@@ -199,7 +199,7 @@ class PosScoringEngine(models.AbstractModel):
 
     @api.model
     def _count_recent_events(self, event_type, user_id, session_id, window_minutes):
-        """Count recent events of the same type by the same user."""
+        """Count recent events of the same type by the same user (company-scoped)."""
         from datetime import timedelta
         cutoff = fields.Datetime.now() - timedelta(minutes=window_minutes)
 
@@ -207,6 +207,7 @@ class PosScoringEngine(models.AbstractModel):
             ('event_type', '=', event_type),
             ('user_id', '=', user_id),
             ('create_date', '>=', cutoff),
+            ('company_id', 'in', self.env.companies.ids),
         ]
         if session_id:
             domain.append(('pos_session_id', '=', session_id))
@@ -215,10 +216,16 @@ class PosScoringEngine(models.AbstractModel):
 
     @api.model
     def _is_after_hours(self, rule):
-        """Check if current time is outside business hours."""
-        now = fields.Datetime.now()
-        # Convert to float hours (UTC — approximate, good enough for scoring)
-        current_hour = now.hour + now.minute / 60.0
+        """Check if current time is outside business hours (company timezone)."""
+        import pytz
+        now_utc = fields.Datetime.now()
+        tz_name = self.env.company.partner_id.tz or self.env.user.tz or 'UTC'
+        try:
+            tz = pytz.timezone(tz_name)
+        except pytz.exceptions.UnknownTimeZoneError:
+            tz = pytz.UTC
+        now_local = pytz.UTC.localize(now_utc).astimezone(tz)
+        current_hour = now_local.hour + now_local.minute / 60.0
         return current_hour < rule.business_hours_start or current_hour >= rule.business_hours_end
 
     @api.model

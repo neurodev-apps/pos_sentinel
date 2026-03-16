@@ -29,12 +29,14 @@ function sentinel() {
     return window.__posSentinel || null;
 }
 
-/** Extract POS context from a model instance */
+/** Extract POS context from a model instance (order or orderline) */
 function ctx(obj) {
     try {
+        // PosOrderline has order_id, not session/config directly
+        const order = obj.order_id || obj;
         return {
-            pos_session_id: obj.session?.id ?? false,
-            pos_config_id: obj.config?.id ?? false,
+            pos_session_id: order.session?.id ?? false,
+            pos_config_id: order.config?.id ?? false,
         };
     } catch {
         return { pos_session_id: false, pos_config_id: false };

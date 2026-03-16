@@ -105,6 +105,15 @@ export const sentinelService = {
         // Expose globally for POS model patches (which lack env.services)
         window.__posSentinel = service;
 
+        // Cleanup on navigation away to prevent orphaned timers
+        window.addEventListener("beforeunload", () => {
+            if (flushTimer) {
+                clearTimeout(flushTimer);
+                flushTimer = null;
+            }
+            delete window.__posSentinel;
+        });
+
         return service;
     },
 };
