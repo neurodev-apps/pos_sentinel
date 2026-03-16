@@ -231,7 +231,10 @@ class PosScoringEngine(models.AbstractModel):
                 f'pos_sentinel.threshold_{level}',
                 str(DEFAULT_THRESHOLDS[level]),
             )
-            thresholds[level] = float(param)
+            try:
+                thresholds[level] = float(param)
+            except (ValueError, TypeError):
+                thresholds[level] = DEFAULT_THRESHOLDS[level]
 
         if score >= thresholds['critical']:
             return 'critical'

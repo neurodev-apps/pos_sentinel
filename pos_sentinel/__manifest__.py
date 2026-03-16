@@ -43,9 +43,11 @@ Security
     'license': 'OPL-1',
     'price': 249.00,
     'currency': 'USD',
+    'uninstall_hook': 'uninstall_hook',
     'depends': [
         'point_of_sale',
         'mail',
+        'hr',
     ],
     'data': [
         'security/pos_sentinel_security.xml',
