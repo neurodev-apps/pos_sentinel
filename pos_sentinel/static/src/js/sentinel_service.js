@@ -15,6 +15,8 @@ import { registry } from "@web/core/registry";
 
 const BATCH_SIZE = 20;
 const FLUSH_INTERVAL_MS = 5000;
+const MAX_QUEUE_SIZE = 500;
+const MAX_FLUSH_RETRIES = 3;
 
 export const sentinelService = {
     dependencies: ["orm"],
@@ -44,7 +46,10 @@ export const sentinelService = {
                 await orm.call("pos.audit.event", "log_events_batch", [batch]);
             } catch (e) {
                 console.warn("[POS Sentinel] Failed to flush events:", e);
-                queue.unshift(...batch);
+                // Re-queue only if we haven't exceeded max size
+                if (queue.length + batch.length <= MAX_QUEUE_SIZE) {
+                    queue.unshift(...batch);
+                }
             } finally {
                 isFlushing = false;
                 if (queue.length > 0) {
@@ -54,6 +59,10 @@ export const sentinelService = {
         }
 
         function logEvent(eventType, data = {}) {
+            // Drop events if queue is full to prevent memory issues
+            if (queue.length >= MAX_QUEUE_SIZE) {
+                return;
+            }
             const event = {
                 event_type: eventType,
                 pos_session_id: data.pos_session_id || false,
@@ -78,8 +87,16 @@ export const sentinelService = {
                 clearTimeout(flushTimer);
                 flushTimer = null;
             }
-            while (queue.length > 0) {
+            let retries = 0;
+            while (queue.length > 0 && retries < MAX_FLUSH_RETRIES) {
+                const prevLen = queue.length;
                 await flush();
+                // If queue didn't shrink, we're stuck — break to avoid infinite loop
+                if (queue.length >= prevLen) {
+                    retries++;
+                } else {
+                    retries = 0;
+                }
             }
         }
 
@@ -88,7 +105,6 @@ export const sentinelService = {
         // Expose globally for POS model patches (which lack env.services)
         window.__posSentinel = service;
 
-        console.log("[POS Sentinel] Service started — event queue ready");
         return service;
     },
 };

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import base64
 import io
 import json
 import logging
@@ -85,58 +86,96 @@ class PosSentinelReportWizard(models.TransientModel):
         return mapping.get(self.risk_levels, [])
 
     def _get_events(self):
-        """Fetch events matching the wizard filters."""
+        """Fetch events matching the wizard filters, company-scoped."""
         domain = [
             ('create_date', '>=', self.date_from),
             ('create_date', '<=', self.date_to),
+            ('company_id', 'in', self.env.companies.ids),
         ] + self._get_risk_domain()
         return self.env['pos.audit.event'].sudo().search(
             domain, order='create_date DESC', limit=10000,
         )
 
     def _get_report_data(self):
-        """Build report data dict."""
+        """Build report data dict using SQL for performance."""
+        self.ensure_one()
+        company_ids = self.env.companies.ids
+
+        # Use SQL for aggregations instead of iterating ORM records
+        risk_domain = self._get_risk_domain()
+        risk_sql = ""
+        params = [self.date_from, self.date_to, tuple(company_ids)]
+
+        if risk_domain:
+            risk_filter = risk_domain[0]
+            if risk_filter[1] == 'in':
+                risk_sql = " AND risk_level IN %s"
+                params.append(tuple(risk_filter[2]))
+            elif risk_filter[1] == '=':
+                risk_sql = " AND risk_level = %s"
+                params.append(risk_filter[2])
+
+        base_where = "WHERE create_date >= %%s AND create_date <= %%s AND company_id IN %%s%s" % risk_sql
+
+        # Summary by risk
+        self.env.cr.execute("""
+            SELECT risk_level, COUNT(*) as cnt
+            FROM pos_audit_event %s
+            GROUP BY risk_level
+        """ % base_where, params)
+        by_risk_raw = {r['risk_level']: r['cnt'] for r in self.env.cr.dictfetchall()}
+
+        # Summary by type
+        self.env.cr.execute("""
+            SELECT event_type, COUNT(*) as cnt
+            FROM pos_audit_event %s
+            GROUP BY event_type ORDER BY cnt DESC
+        """ % base_where, params)
+        by_type_raw = self.env.cr.dictfetchall()
+
+        # Summary by user
+        base_where_pae = base_where.replace('create_date', 'pae.create_date').replace('company_id', 'pae.company_id').replace('risk_level', 'pae.risk_level')
+        self.env.cr.execute("""
+            SELECT COALESCE(rp.name, ru.login) as uname,
+                   COUNT(*) as cnt,
+                   COALESCE(SUM(pae.risk_score), 0) as total_score
+            FROM pos_audit_event pae
+            JOIN res_users ru ON pae.user_id = ru.id
+            LEFT JOIN res_partner rp ON ru.partner_id = rp.id
+            %s
+            GROUP BY rp.name, ru.login
+            ORDER BY total_score DESC
+        """ % base_where_pae, params)
+        by_user_raw = self.env.cr.dictfetchall()
+
+        # Total and tampered count
+        self.env.cr.execute("""
+            SELECT COUNT(*) as total,
+                   COUNT(*) FILTER (WHERE is_tampered = TRUE) as tampered
+            FROM pos_audit_event %s
+        """ % base_where, params)
+        totals = self.env.cr.dictfetchone()
+
+        # For the detail sheet (Excel only), fetch events via ORM with limit
         events = self._get_events()
 
-        # Summary
-        total = len(events)
-        by_risk = {}
-        by_type = {}
-        by_user = {}
-        for ev in events:
-            # Risk level counts
-            rl = ev.risk_level or 'none'
-            by_risk[rl] = by_risk.get(rl, 0) + 1
-            # Event type counts
-            et = ev.event_type
-            by_type[et] = by_type.get(et, 0) + 1
-            # User aggregation
-            uname = ev.user_id.name or ev.user_id.login
-            if uname not in by_user:
-                by_user[uname] = {'count': 0, 'total_score': 0.0}
-            by_user[uname]['count'] += 1
-            by_user[uname]['total_score'] += ev.risk_score or 0.0
-
-        tampered = sum(1 for ev in events if ev.is_tampered)
+        risk_order = ['critical', 'high', 'medium', 'low', 'none']
+        by_risk = []
+        for rl in risk_order:
+            if rl in by_risk_raw:
+                by_risk.append((RISK_LEVEL_LABELS.get(rl, rl), by_risk_raw[rl]))
 
         return {
             'date_from': self.date_from,
             'date_to': self.date_to,
             'risk_filter': dict(self._fields['risk_levels'].selection).get(self.risk_levels),
-            'total': total,
-            'tampered': tampered,
-            'by_risk': [(RISK_LEVEL_LABELS.get(k, k), v) for k, v in sorted(
-                by_risk.items(),
-                key=lambda x: ['critical', 'high', 'medium', 'low', 'none'].index(x[0])
-                if x[0] in ['critical', 'high', 'medium', 'low', 'none'] else 99,
-            )],
-            'by_type': [(EVENT_TYPE_LABELS.get(k, k), v) for k, v in sorted(
-                by_type.items(), key=lambda x: -x[1],
-            )],
-            'by_user': sorted(
-                [(k, v['count'], round(v['total_score'], 1)) for k, v in by_user.items()],
-                key=lambda x: -x[2],
-            ),
+            'total': totals['total'],
+            'tampered': totals['tampered'],
+            'by_risk': by_risk,
+            'by_type': [(EVENT_TYPE_LABELS.get(r['event_type'], r['event_type']), r['cnt'])
+                        for r in by_type_raw],
+            'by_user': [(r['uname'], r['cnt'], round(float(r['total_score']), 1))
+                        for r in by_user_raw],
             'events': events,
             'company': self.env.company,
         }
@@ -202,9 +241,12 @@ class PosSentinelReportWizard(models.TransientModel):
         ws.set_column('B:B', 15)
 
         ws.write(0, 0, 'POS Sentinel Report', title_fmt)
-        ws.write(1, 0, f"Company: {data['company'].name}")
-        ws.write(2, 0, f"Period: {data['date_from'].strftime('%Y-%m-%d')} to {data['date_to'].strftime('%Y-%m-%d')}")
-        ws.write(3, 0, f"Filter: {data['risk_filter']}")
+        ws.write(1, 0, "Company: %s" % data['company'].name)
+        ws.write(2, 0, "Period: %s to %s" % (
+            data['date_from'].strftime('%Y-%m-%d'),
+            data['date_to'].strftime('%Y-%m-%d'),
+        ))
+        ws.write(3, 0, "Filter: %s" % data['risk_filter'])
 
         row = 5
         ws.write(row, 0, 'Summary', subtitle_fmt)
@@ -282,27 +324,25 @@ class PosSentinelReportWizard(models.TransientModel):
             ws3.write(row_idx, 2, score, score_fmt)
 
         wb.close()
-        output.seek(0)
 
         # Save as attachment and return download action
-        filename = f"pos_sentinel_report_{data['date_from'].strftime('%Y%m%d')}_{data['date_to'].strftime('%Y%m%d')}.xlsx"
+        filename = "pos_sentinel_report_%s_%s.xlsx" % (
+            data['date_from'].strftime('%Y%m%d'),
+            data['date_to'].strftime('%Y%m%d'),
+        )
+        output.seek(0)
         attachment = self.env['ir.attachment'].create({
             'name': filename,
             'type': 'binary',
-            'datas': io.BytesIO(output.read()).getvalue(),
+            'datas': base64.b64encode(output.read()),
             'res_model': self._name,
             'res_id': self.id,
             'mimetype': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         })
 
-        # Encode datas properly
-        import base64
-        output.seek(0)
-        attachment.datas = base64.b64encode(output.read())
-
         return {
             'type': 'ir.actions.act_url',
-            'url': f'/web/content/{attachment.id}?download=true',
+            'url': '/web/content/%s?download=true' % attachment.id,
             'target': 'self',
         }
 

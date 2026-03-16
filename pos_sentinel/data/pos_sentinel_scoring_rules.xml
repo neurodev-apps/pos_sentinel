@@ -152,7 +152,7 @@
     <record id="rule_session_open" model="pos.scoring.rule">
         <field name="name">Session Opened</field>
         <field name="event_type">session_open</field>
-        <field name="base_score">0</field>
+        <field name="base_score">5</field>
         <field name="sequence">110</field>
         <field name="after_hours_multiplier">3.0</field>
         <field name="business_hours_start">7</field>

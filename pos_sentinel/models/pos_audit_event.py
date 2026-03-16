@@ -3,6 +3,7 @@
 import hashlib
 import json
 import logging
+import secrets
 from datetime import timedelta
 
 from odoo import api, fields, models, _
@@ -11,6 +12,10 @@ from odoo.exceptions import UserError
 from .pos_audit_engine import get_sentinel_salt, compute_event_hash
 
 _logger = logging.getLogger(__name__)
+
+# Module-level token — only code within this module can know it.
+# Used to gate the context-flag bypass for hash writes and integrity marks.
+_SENTINEL_WRITE_TOKEN = secrets.token_hex(16)
 
 EVENT_TYPES = [
     ('void_line', 'Line Void'),
@@ -168,7 +173,9 @@ class PosAuditEvent(models.Model):
         for rec in self:
             date_str = rec.create_date.strftime('%Y-%m-%d %H:%M') if rec.create_date else ''
             user_name = rec.user_id.name or ''
-            rec.display_name = f"[{type_map.get(rec.event_type, '')}] {user_name} — {date_str}"
+            rec.display_name = "[%s] %s — %s" % (
+                type_map.get(rec.event_type, ''), user_name, date_str,
+            )
 
     # ── Immutability: triple-layer protection ────────────────────
 
@@ -189,17 +196,18 @@ class PosAuditEvent(models.Model):
     def write(self, vals):
         """Prevent modification of audit events.
 
-        The only allowed write operations are:
-        - Setting the integrity hash immediately after creation
-          (signalled by ``_sentinel_hash_update`` context flag).
-        - Marking a record as tampered by the integrity cron
-          (signalled by ``_sentinel_integrity_check`` context flag).
+        The only allowed write operations use a module-level secret token
+        that external code cannot know without importing this module's
+        private variable:
+        - Setting the integrity hash immediately after creation.
+        - Marking a record as tampered by the integrity cron.
         """
         ctx = self.env.context
-        if ctx.get('_sentinel_hash_update') and list(vals.keys()) == ['hash']:
-            return super().write(vals)
-        if ctx.get('_sentinel_integrity_check') and list(vals.keys()) == ['is_tampered']:
-            return super().write(vals)
+        token = ctx.get('_sentinel_write_token')
+        if token == _SENTINEL_WRITE_TOKEN:
+            allowed_keys = set(vals.keys())
+            if allowed_keys == {'hash'} or allowed_keys == {'is_tampered'}:
+                return super().write(vals)
         raise UserError(_(
             'POS audit events cannot be modified. '
             'They are immutable for security and compliance purposes.'
@@ -220,6 +228,20 @@ class PosAuditEvent(models.Model):
             details=self.details or '',
         )
 
+    # ── Internal write helpers ───────────────────────────────────
+
+    def _write_hash(self, hash_value):
+        """Write hash using the module-level token. Internal use only."""
+        return self.with_context(
+            _sentinel_write_token=_SENTINEL_WRITE_TOKEN,
+        ).write({'hash': hash_value})
+
+    def _mark_tampered(self):
+        """Mark records as tampered using the module-level token. Internal use only."""
+        return self.with_context(
+            _sentinel_write_token=_SENTINEL_WRITE_TOKEN,
+        ).write({'is_tampered': True})
+
     # ── Event creation API ───────────────────────────────────────
 
     @api.model
@@ -230,7 +252,6 @@ class PosAuditEvent(models.Model):
             event_type: One of the EVENT_TYPES selection keys.
             vals: dict with optional keys:
                 - pos_session_id, pos_order_id, pos_config_id
-                - user_id (defaults to current user)
                 - employee_id, product_id
                 - amount, currency_id
                 - details (dict, will be JSON-serialized)
@@ -245,7 +266,8 @@ class PosAuditEvent(models.Model):
         else:
             details_json = str(details_raw)
 
-        user_id = vals.get('user_id', self.env.uid)
+        # Always use current user — never trust user_id from caller
+        user_id = self.env.uid
         session_id = vals.get('pos_session_id', False)
         order_id = vals.get('pos_order_id', False)
 
@@ -260,12 +282,11 @@ class PosAuditEvent(models.Model):
             'amount': vals.get('amount', 0.0),
             'currency_id': vals.get('currency_id', self.env.company.currency_id.id),
             'details': details_json,
-            'company_id': vals.get('company_id', self.env.company.id),
+            'company_id': self.env.company.id,
         }
 
         # ── Compute risk score via Neuro-Scoring Engine ──────────
         if 'risk_score' in vals and 'risk_level' in vals:
-            # Explicit score provided (e.g. from tests)
             create_vals['risk_score'] = vals['risk_score']
             create_vals['risk_level'] = vals['risk_level']
         else:
@@ -284,9 +305,7 @@ class PosAuditEvent(models.Model):
                 create_vals['risk_score'] = 0.0
                 create_vals['risk_level'] = 'none'
 
-        create_vals.update({
-            'hash': '',
-        })
+        create_vals['hash'] = ''
 
         try:
             record = self.sudo().create(create_vals)
@@ -301,9 +320,7 @@ class PosAuditEvent(models.Model):
                 create_date=record.create_date,
                 details=details_json,
             )
-            record.with_context(_sentinel_hash_update=True).write({
-                'hash': audit_hash,
-            })
+            record._write_hash(audit_hash)
             return record
         except Exception as e:
             _logger.critical("POS Sentinel: failed to create audit event: %s", e)
@@ -315,16 +332,10 @@ class PosAuditEvent(models.Model):
     def log_events_batch(self, events):
         """Receive a batch of events from the POS frontend Shadow Logger.
 
-        Called via orm.call() from the sentinel_service.js. Each event
-        is a dict with keys matching create_event() vals.
+        Called via orm.call() from the sentinel_service.js.
 
         Args:
-            events: list of dicts with keys:
-                - event_type (str, required)
-                - pos_session_id, pos_order_id, pos_config_id (int|False)
-                - product_id, employee_id (int|False)
-                - amount (float)
-                - details (dict)
+            events: list of dicts with event_type and optional data.
 
         Returns:
             dict with 'created' count.
@@ -398,9 +409,7 @@ class PosAuditEvent(models.Model):
         # Mark tampered records
         if tampered_ids:
             tampered_records = self.sudo().browse(tampered_ids)
-            tampered_records.with_context(
-                _sentinel_integrity_check=True
-            ).write({'is_tampered': True})
+            tampered_records._mark_tampered()
 
         # Persist results for dashboard
         ICP = self.env['ir.config_parameter'].sudo()
@@ -423,17 +432,19 @@ class PosAuditEvent(models.Model):
 
     @api.model
     def _cron_cleanup_old_events(self):
-        """Archive audit events older than the configured retention period.
+        """Retention report: count audit events older than the configured period.
 
         Uses the system parameter ``pos_sentinel.retention_days`` (default 365).
-        Events are NOT deleted — only the ``active`` field is set to False
-        (if the field exists), otherwise this is a no-op to preserve immutability.
+        Events are NOT deleted — this cron only reports the count for awareness.
+        Immutability is preserved.
         """
         ICP = self.env['ir.config_parameter'].sudo()
-        retention_days = int(ICP.get_param('pos_sentinel.retention_days', '365'))
+        try:
+            retention_days = int(ICP.get_param('pos_sentinel.retention_days', '365'))
+        except (ValueError, TypeError):
+            retention_days = 365
         cutoff = fields.Datetime.now() - timedelta(days=retention_days)
 
-        # Count only — we don't actually delete, just log for awareness
         self.env.cr.execute("""
             SELECT COUNT(*)
             FROM pos_audit_event

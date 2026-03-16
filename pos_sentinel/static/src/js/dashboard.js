@@ -61,6 +61,7 @@ export class PosSentinelDashboard extends Component {
             byUser: useRef("chartByUser"),
         };
         this.charts = {};
+        this._chartTimeout = null;
 
         onMounted(async () => {
             await loadBundle("web.chartjs_lib");
@@ -68,6 +69,10 @@ export class PosSentinelDashboard extends Component {
         });
 
         onWillUnmount(() => {
+            if (this._chartTimeout) {
+                clearTimeout(this._chartTimeout);
+                this._chartTimeout = null;
+            }
             this.destroyCharts();
         });
     }
@@ -90,7 +95,10 @@ export class PosSentinelDashboard extends Component {
             this.state.data = data;
             this.state.loading = false;
             // Use setTimeout to ensure DOM is updated before rendering charts
-            setTimeout(() => this.renderCharts(), 0);
+            this._chartTimeout = setTimeout(() => {
+                this._chartTimeout = null;
+                this.renderCharts();
+            }, 0);
         } catch (e) {
             console.error("[POS Sentinel] Dashboard load error:", e);
             this.state.loading = false;
