@@ -116,6 +116,9 @@ class PosSentinelReportWizard(models.TransientModel):
                 params.append(risk_filter[2])
 
         base_where = "WHERE create_date >= %%s AND create_date <= %%s AND company_id IN %%s%s" % risk_sql
+        qual_where = "WHERE pae.create_date >= %%s AND pae.create_date <= %%s AND pae.company_id IN %%s%s" % (
+            risk_sql.replace('risk_level', 'pae.risk_level') if risk_sql else ''
+        )
 
         # Summary by risk
         self.env.cr.execute("""
@@ -134,7 +137,6 @@ class PosSentinelReportWizard(models.TransientModel):
         by_type_raw = self.env.cr.dictfetchall()
 
         # Summary by user
-        base_where_pae = base_where.replace('create_date', 'pae.create_date').replace('company_id', 'pae.company_id').replace('risk_level', 'pae.risk_level')
         self.env.cr.execute("""
             SELECT COALESCE(rp.name, ru.login) as uname,
                    COUNT(*) as cnt,
@@ -145,7 +147,7 @@ class PosSentinelReportWizard(models.TransientModel):
             %s
             GROUP BY rp.name, ru.login
             ORDER BY total_score DESC
-        """ % base_where_pae, params)
+        """ % qual_where, params)
         by_user_raw = self.env.cr.dictfetchall()
 
         # Total and tampered count

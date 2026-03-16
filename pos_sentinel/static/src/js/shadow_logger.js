@@ -32,9 +32,10 @@ function sentinel() {
 /** Extract POS context from a model instance */
 function ctx(obj) {
     try {
+        const order = obj.order_id || obj;
         return {
-            pos_session_id: obj.session?.id ?? false,
-            pos_config_id: obj.config?.id ?? false,
+            pos_session_id: order.session?.id ?? false,
+            pos_config_id: order.config?.id ?? false,
         };
     } catch {
         return { pos_session_id: false, pos_config_id: false };
