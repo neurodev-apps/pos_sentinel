@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import hashlib
+import hmac
 import json
 import logging
 import secrets
@@ -286,24 +287,20 @@ class PosAuditEvent(models.Model):
         }
 
         # ── Compute risk score via Neuro-Scoring Engine ──────────
-        if 'risk_score' in vals and 'risk_level' in vals:
-            create_vals['risk_score'] = vals['risk_score']
-            create_vals['risk_level'] = vals['risk_level']
-        else:
-            try:
-                scoring = self.env['pos.scoring.engine'].compute_risk(
-                    event_type, {
-                        'amount': vals.get('amount', 0.0),
-                        'user_id': user_id,
-                        'pos_session_id': session_id,
-                    }
-                )
-                create_vals['risk_score'] = scoring['risk_score']
-                create_vals['risk_level'] = scoring['risk_level']
-            except Exception as e:
-                _logger.warning("POS Sentinel: scoring failed, defaulting to none: %s", e)
-                create_vals['risk_score'] = 0.0
-                create_vals['risk_level'] = 'none'
+        try:
+            scoring = self.env['pos.scoring.engine'].compute_risk(
+                event_type, {
+                    'amount': vals.get('amount', 0.0),
+                    'user_id': user_id,
+                    'pos_session_id': session_id,
+                }
+            )
+            create_vals['risk_score'] = scoring['risk_score']
+            create_vals['risk_level'] = scoring['risk_level']
+        except Exception as e:
+            _logger.warning("POS Sentinel: scoring failed, defaulting to none: %s", e)
+            create_vals['risk_score'] = 0.0
+            create_vals['risk_level'] = 'none'
 
         create_vals['hash'] = ''
 
@@ -403,7 +400,7 @@ class PosAuditEvent(models.Model):
                     f"|{date_str}|{details or ''}|{salt}"
                 )
                 expected = hashlib.sha256(hash_input.encode('utf-8')).hexdigest()
-                if stored_hash != expected:
+                if not hmac.compare_digest(stored_hash or '', expected):
                     tampered_ids.append(log_id)
                     _logger.warning(
                         "POS SENTINEL INTEGRITY ALERT: pos.audit.event id=%s "
@@ -450,11 +447,16 @@ class PosAuditEvent(models.Model):
             retention_days = 365
         cutoff = fields.Datetime.now() - timedelta(days=retention_days)
 
+        company_ids = self.env.companies.ids
+        if not company_ids:
+            return
+
         self.env.cr.execute("""
             SELECT COUNT(*)
             FROM pos_audit_event
             WHERE create_date < %s
-        """, (cutoff,))
+              AND company_id IN %s
+        """, (cutoff, tuple(company_ids)))
         count = self.env.cr.fetchone()[0]
 
         if count:
