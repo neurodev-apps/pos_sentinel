@@ -6,5 +6,3 @@ access_pos_scoring_rule_auditor,pos.scoring.rule.auditor,model_pos_scoring_rule,
 access_pos_scoring_rule_manager,pos.scoring.rule.manager,model_pos_scoring_rule,pos_sentinel.group_pos_security_manager,1,1,1,1
 access_pos_sentinel_report_wizard_auditor,pos.sentinel.report.wizard.auditor,model_pos_sentinel_report_wizard,pos_sentinel.group_pos_auditor,1,1,1,0
 access_pos_sentinel_report_wizard_manager,pos.sentinel.report.wizard.manager,model_pos_sentinel_report_wizard,pos_sentinel.group_pos_security_manager,1,1,1,0
-access_pos_sentinel_dashboard_auditor,pos.sentinel.dashboard.auditor,model_pos_sentinel_dashboard,pos_sentinel.group_pos_auditor,1,0,0,0
-access_pos_sentinel_dashboard_manager,pos.sentinel.dashboard.manager,model_pos_sentinel_dashboard,pos_sentinel.group_pos_security_manager,1,0,0,0

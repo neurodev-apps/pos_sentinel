@@ -12,6 +12,8 @@ class TestPosAuditEvent(TransactionCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.AuditEvent = cls.env['pos.audit.event']
+        # Deactivate seed scoring rules so tests are deterministic
+        cls.env['pos.scoring.rule'].search([]).write({'active': False})
 
     def _create_test_event(self, event_type='void_line', **kwargs):
         """Helper to create a test audit event via the public API."""
