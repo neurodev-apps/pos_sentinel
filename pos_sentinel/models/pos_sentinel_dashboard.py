@@ -143,9 +143,14 @@ class PosSentinelDashboard(models.AbstractModel):
 
     def _get_top_products(self, dt_from, dt_to, company_ids):
         """Top 10 products involved in risky events."""
+        lang = self.env.lang or 'en_US'
         self.env.cr.execute("""
             SELECT
-                COALESCE(pt.name->>'en_US', pt.name->>'es_CL', 'Unknown') AS product_name,
+                COALESCE(
+                    pt.name->>%s,
+                    (SELECT value FROM jsonb_each_text(pt.name) LIMIT 1),
+                    'Unknown'
+                ) AS product_name,
                 COUNT(*) AS event_count,
                 COALESCE(SUM(pae.risk_score), 0) AS total_score
             FROM pos_audit_event pae
@@ -158,7 +163,7 @@ class PosSentinelDashboard(models.AbstractModel):
             GROUP BY pt.name
             ORDER BY total_score DESC
             LIMIT 10
-        """, (dt_from, dt_to, tuple(company_ids)))
+        """, (lang, dt_from, dt_to, tuple(company_ids)))
         return self.env.cr.dictfetchall()
 
     def _get_integrity_status(self):
