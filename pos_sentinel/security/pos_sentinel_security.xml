@@ -11,7 +11,6 @@
     <!-- POS Auditor: read-only access to audit events and dashboard -->
     <record id="group_pos_auditor" model="res.groups">
         <field name="name">POS Auditor</field>
-        <field name="sequence">10</field>
         <field name="category_id" ref="module_category_pos_sentinel"/>
         <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
         <field name="comment">Read-only access to POS audit events and the fraud dashboard.</field>
@@ -20,7 +19,6 @@
     <!-- POS Security Manager: full access, inherits from POS Auditor -->
     <record id="group_pos_security_manager" model="res.groups">
         <field name="name">POS Security Manager</field>
-        <field name="sequence">20</field>
         <field name="category_id" ref="module_category_pos_sentinel"/>
         <field name="implied_ids" eval="[(4, ref('group_pos_auditor'))]"/>
         <field name="comment">Full access: configure scoring rules, view all events and dashboard, run integrity checks.</field>
