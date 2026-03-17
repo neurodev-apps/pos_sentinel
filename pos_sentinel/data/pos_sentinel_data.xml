@@ -16,7 +16,6 @@
         <field name="code">model._cron_verify_integrity()</field>
         <field name="interval_number">7</field>
         <field name="interval_type">days</field>
-        <field name="numbercall">-1</field>
         <field name="active">True</field>
         <field name="priority">50</field>
     </record>
@@ -29,7 +28,6 @@
         <field name="code">model._cron_cleanup_old_events()</field>
         <field name="interval_number">30</field>
         <field name="interval_type">days</field>
-        <field name="numbercall">-1</field>
         <field name="active">True</field>
         <field name="priority">100</field>
     </record>
