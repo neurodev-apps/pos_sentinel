@@ -140,19 +140,19 @@
                 <filter name="filter_cash" string="Cash Movements"
                         domain="[('event_type', 'in', ('cash_in', 'cash_out'))]"/>
                 <separator/>
-                <group expand="0" string="Group By">
+                <group>
                     <filter name="group_event_type" string="Event Type"
-                            context="{'group_by': 'event_type'}"/>
+                            domain="[]" context="{'group_by': 'event_type'}"/>
                     <filter name="group_risk_level" string="Risk Level"
-                            context="{'group_by': 'risk_level'}"/>
+                            domain="[]" context="{'group_by': 'risk_level'}"/>
                     <filter name="group_user" string="User"
-                            context="{'group_by': 'user_id'}"/>
+                            domain="[]" context="{'group_by': 'user_id'}"/>
                     <filter name="group_pos_config" string="POS Config"
-                            context="{'group_by': 'pos_config_id'}"/>
+                            domain="[]" context="{'group_by': 'pos_config_id'}"/>
                     <filter name="group_session" string="Session"
-                            context="{'group_by': 'pos_session_id'}"/>
+                            domain="[]" context="{'group_by': 'pos_session_id'}"/>
                     <filter name="group_date" string="Date"
-                            context="{'group_by': 'create_date:day'}"/>
+                            domain="[]" context="{'group_by': 'create_date:day'}"/>
                 </group>
             </search>
         </field>
