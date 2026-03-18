@@ -9,35 +9,12 @@ from datetime import timedelta
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 
+from ..models.pos_audit_event import EVENT_TYPES, RISK_LEVELS
+
 _logger = logging.getLogger(__name__)
 
-EVENT_TYPE_LABELS = {
-    'void_line': 'Line Void',
-    'price_override': 'Price Override',
-    'discount': 'Discount Applied',
-    'refund': 'Refund',
-    'cash_in': 'Cash In',
-    'cash_out': 'Cash Out',
-    'order_delete': 'Order Deleted',
-    'line_qty_change': 'Quantity Changed',
-    'payment_change': 'Payment Modified',
-    'session_open': 'Session Opened',
-    'session_close': 'Session Closed',
-    'order_complete': 'Order Completed',
-    'manual_price': 'Manual Price Entry',
-    'negative_qty': 'Negative Quantity',
-    'post_payment_edit': 'Post-Payment Edit',
-    'sequence_gap': 'Sequence Gap',
-    'other': 'Other',
-}
-
-RISK_LEVEL_LABELS = {
-    'none': 'None',
-    'low': 'Low',
-    'medium': 'Medium',
-    'high': 'High',
-    'critical': 'Critical',
-}
+EVENT_TYPE_LABELS = dict(EVENT_TYPES)
+RISK_LEVEL_LABELS = dict(RISK_LEVELS)
 
 
 class PosSentinelReportWizard(models.TransientModel):
