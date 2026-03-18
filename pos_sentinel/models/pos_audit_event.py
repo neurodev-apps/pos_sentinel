@@ -337,10 +337,11 @@ class PosAuditEvent(models.Model):
         Returns:
             dict with 'created' count.
         """
+        allowed_types = {t[0] for t in EVENT_TYPES}
         created = 0
         for event_data in events:
             event_type = event_data.get('event_type')
-            if not event_type:
+            if not event_type or event_type not in allowed_types:
                 continue
             try:
                 self.create_event(event_type, event_data)

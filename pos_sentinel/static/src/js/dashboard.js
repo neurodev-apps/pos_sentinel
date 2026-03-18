@@ -54,6 +54,7 @@ export class PosSentinelDashboard extends Component {
     setup() {
         this.orm = useService("orm");
         this.action = useService("action");
+        this.notification = useService("notification");
         this.state = useState({
             data: null,
             loading: true,
@@ -106,6 +107,7 @@ export class PosSentinelDashboard extends Component {
             }, 0);
         } catch (e) {
             console.error("[POS Sentinel] Dashboard load error:", e);
+            this.notification.add(_t("Failed to load dashboard data."), { type: "danger" });
             this.state.loading = false;
         }
     }
@@ -138,10 +140,18 @@ export class PosSentinelDashboard extends Component {
     renderCharts() {
         if (!this.state.data || !window.Chart) return;
         this.destroyCharts();
-        this.renderByDayChart();
-        this.renderByTypeChart();
-        this.renderByRiskChart();
-        this.renderByUserChart();
+        for (const method of [
+            "renderByDayChart",
+            "renderByTypeChart",
+            "renderByRiskChart",
+            "renderByUserChart",
+        ]) {
+            try {
+                this[method]();
+            } catch (e) {
+                console.error(`[POS Sentinel] ${method} failed:`, e);
+            }
+        }
     }
 
     renderByDayChart() {

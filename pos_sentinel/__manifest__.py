@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'POS Sentinel - Behavioral Fraud Detection',
-    'version': '18.0.1.2.0',
+    'version': '18.0.1.3.0',
     'category': 'Point of Sale',
     'summary': 'Real-time behavioral fraud detection and immutable audit trail for Odoo POS',
     'description': """
