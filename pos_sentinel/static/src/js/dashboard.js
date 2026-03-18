@@ -87,13 +87,13 @@ export class PosSentinelDashboard extends Component {
         try {
             const days = parseInt(this.state.period);
             const now = new Date();
-            const from = new Date(now - days * 24 * 60 * 60 * 1000);
+            const dateFrom = new Date(now - days * 24 * 60 * 60 * 1000);
             const data = await this.orm.call(
                 "pos.sentinel.dashboard",
                 "get_dashboard_data",
                 [],
                 {
-                    date_from: from.toISOString(),
+                    date_from: dateFrom.toISOString(),
                     date_to: now.toISOString(),
                 }
             );

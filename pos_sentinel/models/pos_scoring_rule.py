@@ -223,6 +223,7 @@ class PosScoringEngine(models.AbstractModel):
         try:
             tz = pytz.timezone(tz_name)
         except pytz.exceptions.UnknownTimeZoneError:
+            _logger.warning("POS Sentinel: unknown timezone '%s', defaulting to UTC", tz_name)
             tz = pytz.UTC
         now_local = pytz.UTC.localize(now_utc).astimezone(tz)
         current_hour = now_local.hour + now_local.minute / 60.0
