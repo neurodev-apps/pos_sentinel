@@ -252,30 +252,6 @@ patch(PosStore.prototype, {
     },
 
     /**
-     * Capture: cash in / cash out
-     * Note: cashMove() opens a popup that doesn't return payload data,
-     * so we log the event occurrence without specific amount.
-     */
-    async cashMove() {
-        const s = this.env?.services?.pos_sentinel || sentinel();
-        if (s) {
-            try {
-                s.logEvent("cash_out", {
-                    pos_session_id: this.session?.id ?? false,
-                    pos_config_id: this.config?.id ?? false,
-                    amount: 0,
-                    details: {
-                        action: "cash_move_initiated",
-                    },
-                });
-            } catch (e) {
-                console.warn("[POS Sentinel] cash_move error:", e);
-            }
-        }
-        return await super.cashMove(...arguments);
-    },
-
-    /**
      * Capture: session close + flush pending events
      */
     async closeSession() {
