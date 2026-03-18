@@ -17,6 +17,11 @@ def uninstall_hook(env):
         'pos_sentinel.hash_salt',
         'pos_sentinel.last_integrity_check',
         'pos_sentinel.last_tampered_count',
+        'pos_sentinel.retention_days',
+        'pos_sentinel.threshold_low',
+        'pos_sentinel.threshold_medium',
+        'pos_sentinel.threshold_high',
+        'pos_sentinel.threshold_critical',
     ]:
         ICP.set_param(key, '')
 

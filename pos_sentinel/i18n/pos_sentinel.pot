@@ -1,0 +1,829 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# * pos_sentinel
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-03-17 00:00+0000\n"
+"PO-Revision-Date: 2026-03-17 00:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: pos_sentinel
+#: model:ir.model,name:pos_sentinel.model_pos_audit_event
+msgid "POS Audit Event"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model,name:pos_sentinel.model_pos_scoring_rule
+msgid "POS Scoring Rule"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model,name:pos_sentinel.model_pos_scoring_engine
+msgid "POS Scoring Engine"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model,name:pos_sentinel.model_pos_sentinel_dashboard
+msgid "POS Sentinel Dashboard Data Provider"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model,name:pos_sentinel.model_pos_sentinel_report_wizard
+msgid "POS Sentinel Report Wizard"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.module.category,name:pos_sentinel.module_category_pos_sentinel
+msgid "POS Sentinel"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:res.groups,name:pos_sentinel.group_pos_auditor
+msgid "POS Auditor"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:res.groups,name:pos_sentinel.group_pos_security_manager
+msgid "POS Security Manager"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:res.groups,comment:pos_sentinel.group_pos_auditor
+msgid "Read-only access to POS audit events and the fraud dashboard."
+msgstr ""
+
+#. module: pos_sentinel
+#: model:res.groups,comment:pos_sentinel.group_pos_security_manager
+msgid "Full access: configure scoring rules, view all events and dashboard, run integrity checks."
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.rule,name:pos_sentinel.rule_pos_audit_event_company_auditor
+msgid "POS Audit Event: Company Access (Auditor)"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.rule,name:pos_sentinel.rule_pos_audit_event_company_manager
+msgid "POS Audit Event: Company Access (Security Manager)"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.rule,name:pos_sentinel.rule_pos_scoring_rule_company
+msgid "POS Scoring Rule: Company Access"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.actions.act_window,name:pos_sentinel.action_pos_audit_event
+msgid "POS Audit Events"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.actions.act_window,name:pos_sentinel.action_pos_scoring_rule
+msgid "Scoring Rules"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.actions.act_window,name:pos_sentinel.action_pos_sentinel_report_wizard
+msgid "Generate Report"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.actions.client,name:pos_sentinel.action_pos_sentinel_dashboard
+msgid "POS Sentinel Dashboard"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.actions.report,name:pos_sentinel.action_report_sentinel_pdf
+msgid "POS Sentinel Report"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.cron,name:pos_sentinel.cron_verify_integrity
+msgid "POS Sentinel: Verify Event Integrity"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.cron,name:pos_sentinel.cron_cleanup_report
+msgid "POS Sentinel: Retention Report"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.menu,name:pos_sentinel.menu_pos_sentinel_root
+msgid "POS Sentinel"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.menu,name:pos_sentinel.menu_pos_sentinel_dashboard
+msgid "Dashboard"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.menu,name:pos_sentinel.menu_pos_audit_events
+msgid "Audit Events"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.menu,name:pos_sentinel.menu_pos_sentinel_config
+msgid "Configuration"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.menu,name:pos_sentinel.menu_pos_scoring_rules
+msgid "Scoring Rules"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.menu,name:pos_sentinel.menu_pos_sentinel_report
+msgid "Generate Report"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields,field_description:pos_sentinel.field_pos_audit_event__event_type
+#: model:ir.model.fields,field_description:pos_sentinel.field_pos_scoring_rule__event_type
+msgid "Event Type"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields,field_description:pos_sentinel.field_pos_audit_event__risk_level
+msgid "Risk Level"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields,field_description:pos_sentinel.field_pos_audit_event__risk_score
+msgid "Risk Score"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields,field_description:pos_sentinel.field_pos_audit_event__pos_session_id
+msgid "POS Session"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields,field_description:pos_sentinel.field_pos_audit_event__pos_order_id
+msgid "POS Order"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields,field_description:pos_sentinel.field_pos_audit_event__pos_config_id
+msgid "POS Config"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields,field_description:pos_sentinel.field_pos_audit_event__user_id
+msgid "User"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields,field_description:pos_sentinel.field_pos_audit_event__employee_id
+msgid "Employee"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields,field_description:pos_sentinel.field_pos_audit_event__details
+msgid "Event Details"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields,field_description:pos_sentinel.field_pos_audit_event__amount
+msgid "Amount"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields,field_description:pos_sentinel.field_pos_audit_event__currency_id
+msgid "Currency"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields,field_description:pos_sentinel.field_pos_audit_event__product_id
+msgid "Product"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields,field_description:pos_sentinel.field_pos_audit_event__hash
+msgid "Integrity Hash"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields,field_description:pos_sentinel.field_pos_audit_event__is_tampered
+msgid "Tampered"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields,field_description:pos_sentinel.field_pos_audit_event__company_id
+#: model:ir.model.fields,field_description:pos_sentinel.field_pos_scoring_rule__company_id
+msgid "Company"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields,field_description:pos_sentinel.field_pos_audit_event__display_name
+msgid "Display Name"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields,field_description:pos_sentinel.field_pos_scoring_rule__name
+msgid "Rule Name"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields,field_description:pos_sentinel.field_pos_scoring_rule__base_score
+msgid "Base Score"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields,field_description:pos_sentinel.field_pos_scoring_rule__amount_threshold
+msgid "Amount Threshold"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields,field_description:pos_sentinel.field_pos_scoring_rule__amount_multiplier
+msgid "Amount Multiplier"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields,field_description:pos_sentinel.field_pos_scoring_rule__frequency_window_minutes
+msgid "Frequency Window (min)"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields,field_description:pos_sentinel.field_pos_scoring_rule__frequency_threshold
+msgid "Frequency Threshold"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields,field_description:pos_sentinel.field_pos_scoring_rule__frequency_multiplier
+msgid "Frequency Multiplier"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields,field_description:pos_sentinel.field_pos_scoring_rule__after_hours_multiplier
+msgid "After-Hours Multiplier"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields,field_description:pos_sentinel.field_pos_scoring_rule__business_hours_start
+msgid "Business Hours Start"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields,field_description:pos_sentinel.field_pos_scoring_rule__business_hours_end
+msgid "Business Hours End"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields,field_description:pos_sentinel.field_pos_sentinel_report_wizard__date_from
+msgid "From"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields,field_description:pos_sentinel.field_pos_sentinel_report_wizard__date_to
+msgid "To"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields,field_description:pos_sentinel.field_pos_sentinel_report_wizard__risk_levels
+msgid "Risk Level Filter"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields,field_description:pos_sentinel.field_pos_sentinel_report_wizard__report_format
+msgid "Format"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields.selection,name:pos_sentinel.selection__pos_audit_event__event_type__void_line
+msgid "Line Void"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields.selection,name:pos_sentinel.selection__pos_audit_event__event_type__price_override
+msgid "Price Override"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields.selection,name:pos_sentinel.selection__pos_audit_event__event_type__discount
+msgid "Discount Applied"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields.selection,name:pos_sentinel.selection__pos_audit_event__event_type__refund
+msgid "Refund"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields.selection,name:pos_sentinel.selection__pos_audit_event__event_type__cash_in
+msgid "Cash In"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields.selection,name:pos_sentinel.selection__pos_audit_event__event_type__cash_out
+msgid "Cash Out"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields.selection,name:pos_sentinel.selection__pos_audit_event__event_type__order_delete
+msgid "Order Deleted"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields.selection,name:pos_sentinel.selection__pos_audit_event__event_type__line_qty_change
+msgid "Quantity Changed"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields.selection,name:pos_sentinel.selection__pos_audit_event__event_type__payment_change
+msgid "Payment Modified"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields.selection,name:pos_sentinel.selection__pos_audit_event__event_type__session_open
+msgid "Session Opened"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields.selection,name:pos_sentinel.selection__pos_audit_event__event_type__session_close
+msgid "Session Closed"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields.selection,name:pos_sentinel.selection__pos_audit_event__event_type__order_complete
+msgid "Order Completed"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields.selection,name:pos_sentinel.selection__pos_audit_event__event_type__manual_price
+msgid "Manual Price Entry"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields.selection,name:pos_sentinel.selection__pos_audit_event__event_type__negative_qty
+msgid "Negative Quantity"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields.selection,name:pos_sentinel.selection__pos_audit_event__event_type__post_payment_edit
+msgid "Post-Payment Edit"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields.selection,name:pos_sentinel.selection__pos_audit_event__event_type__sequence_gap
+msgid "Sequence Gap Detected"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields.selection,name:pos_sentinel.selection__pos_audit_event__event_type__other
+msgid "Other"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields.selection,name:pos_sentinel.selection__pos_audit_event__risk_level__none
+msgid "None"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields.selection,name:pos_sentinel.selection__pos_audit_event__risk_level__low
+msgid "Low"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields.selection,name:pos_sentinel.selection__pos_audit_event__risk_level__medium
+msgid "Medium"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields.selection,name:pos_sentinel.selection__pos_audit_event__risk_level__high
+msgid "High"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields.selection,name:pos_sentinel.selection__pos_audit_event__risk_level__critical
+msgid "Critical"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields.selection,name:pos_sentinel.selection__pos_sentinel_report_wizard__risk_levels__all
+msgid "All Levels"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields.selection,name:pos_sentinel.selection__pos_sentinel_report_wizard__risk_levels__risky
+msgid "Medium + High + Critical"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields.selection,name:pos_sentinel.selection__pos_sentinel_report_wizard__risk_levels__high_critical
+msgid "High + Critical Only"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields.selection,name:pos_sentinel.selection__pos_sentinel_report_wizard__risk_levels__critical
+msgid "Critical Only"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields.selection,name:pos_sentinel.selection__pos_sentinel_report_wizard__report_format__pdf
+msgid "PDF"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields.selection,name:pos_sentinel.selection__pos_sentinel_report_wizard__report_format__xlsx
+msgid "Excel (XLSX)"
+msgstr ""
+
+#. module: pos_sentinel
+#: code:addons/pos_sentinel/models/pos_audit_event.py:0
+#, python-format
+msgid "POS audit events cannot be deleted. They are immutable for security and compliance purposes."
+msgstr ""
+
+#. module: pos_sentinel
+#: code:addons/pos_sentinel/models/pos_audit_event.py:0
+#, python-format
+msgid "POS audit events cannot be duplicated. Each entry is unique and immutable."
+msgstr ""
+
+#. module: pos_sentinel
+#: code:addons/pos_sentinel/models/pos_audit_event.py:0
+#, python-format
+msgid "POS audit events cannot be modified. They are immutable for security and compliance purposes."
+msgstr ""
+
+#. module: pos_sentinel
+#: code:addons/pos_sentinel/models/pos_scoring_rule.py:0
+#, python-format
+msgid "Base score must be between 0 and 100."
+msgstr ""
+
+#. module: pos_sentinel
+#: code:addons/pos_sentinel/models/pos_scoring_rule.py:0
+#, python-format
+msgid "Multipliers must be between 0.0 and 10.0."
+msgstr ""
+
+#. module: pos_sentinel
+#: code:addons/pos_sentinel/wizard/pos_sentinel_report_wizard.py:0
+#, python-format
+msgid "xlsxwriter is required for Excel export. Install it with: pip install xlsxwriter"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields,help:pos_sentinel.field_pos_audit_event__details
+msgid "JSON with event-specific data (old/new values, amounts, etc.)"
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields,help:pos_sentinel.field_pos_audit_event__hash
+msgid "SHA-256 hash for tamper detection."
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields,help:pos_sentinel.field_pos_audit_event__is_tampered
+msgid "Set to True by the integrity verification cron if the hash does not match."
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields,help:pos_sentinel.field_pos_scoring_rule__base_score
+msgid "Base risk score assigned when this rule matches."
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields,help:pos_sentinel.field_pos_scoring_rule__amount_threshold
+msgid "If event amount exceeds this value, apply the amount multiplier. 0 = no amount check."
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields,help:pos_sentinel.field_pos_scoring_rule__amount_multiplier
+msgid "Multiply base score by this factor when amount exceeds threshold."
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields,help:pos_sentinel.field_pos_scoring_rule__frequency_window_minutes
+msgid "Check how many similar events occurred in this time window. 0 = no frequency check."
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields,help:pos_sentinel.field_pos_scoring_rule__frequency_threshold
+msgid "If event count in window exceeds this, apply frequency multiplier. 0 = no frequency check."
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields,help:pos_sentinel.field_pos_scoring_rule__frequency_multiplier
+msgid "Multiply base score by this factor when frequency threshold is exceeded."
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields,help:pos_sentinel.field_pos_scoring_rule__after_hours_multiplier
+msgid "Multiply score if event occurs outside business hours. 1.0 = no effect."
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields,help:pos_sentinel.field_pos_scoring_rule__business_hours_start
+msgid "Start of business hours (24h format, e.g. 8.0 = 08:00)."
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields,help:pos_sentinel.field_pos_scoring_rule__business_hours_end
+msgid "End of business hours (24h format, e.g. 22.0 = 22:00)."
+msgstr ""
+
+#. module: pos_sentinel
+#: model:ir.model.fields,help:pos_sentinel.field_pos_scoring_rule__company_id
+msgid "Leave empty for global rule."
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.view_pos_audit_event_list
+msgid "Date"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.view_pos_audit_event_form
+msgid "POS Order"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.view_pos_audit_event_form
+msgid "Event"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.view_pos_audit_event_form
+msgid "Timestamp"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.view_pos_audit_event_form
+msgid "POS Context"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.view_pos_audit_event_form
+msgid "Risk Assessment"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.view_pos_audit_event_form
+msgid "Integrity"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.view_pos_audit_event_form
+msgid "Event Details"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.view_pos_audit_event_search
+msgid "Today"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.view_pos_audit_event_search
+msgid "This Week"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.view_pos_audit_event_search
+msgid "This Month"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.view_pos_audit_event_search
+msgid "Critical"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.view_pos_audit_event_search
+msgid "High Risk"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.view_pos_audit_event_search
+msgid "Medium Risk"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.view_pos_audit_event_search
+msgid "All Risky"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.view_pos_audit_event_search
+msgid "Tampered"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.view_pos_audit_event_search
+msgid "Voids"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.view_pos_audit_event_search
+msgid "Refunds"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.view_pos_audit_event_search
+msgid "Price Overrides"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.view_pos_audit_event_search
+msgid "Discounts"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.view_pos_audit_event_search
+msgid "Cash Movements"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.view_pos_audit_event_search
+msgid "Event Type"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.view_pos_audit_event_search
+msgid "Risk Level"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.view_pos_audit_event_search
+msgid "User"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.view_pos_audit_event_search
+msgid "POS Config"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.view_pos_audit_event_search
+msgid "Session"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.view_pos_audit_event_search
+msgid "Date"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.actions.act_window,help:pos_sentinel.action_pos_audit_event
+msgid "No audit events recorded yet"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.actions.act_window,help:pos_sentinel.action_pos_audit_event
+msgid "POS Sentinel automatically captures events from your Point of Sale operations. Events will appear here once POS sessions are active."
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.view_pos_scoring_rule_form
+msgid "Trigger"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.view_pos_scoring_rule_form
+msgid "Scope"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.view_pos_scoring_rule_form
+msgid "Amount Condition"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.view_pos_scoring_rule_form
+msgid "If the event amount exceeds the threshold, the base score is multiplied by the amount multiplier. Set threshold to 0 to disable."
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.view_pos_scoring_rule_form
+msgid "Frequency Condition"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.view_pos_scoring_rule_form
+msgid "Counts how many events of the same type were created by the same user in the time window. If the count exceeds the threshold, the base score is multiplied. Set window to 0 to disable."
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.view_pos_scoring_rule_form
+msgid "After-Hours Condition"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.view_pos_scoring_rule_form
+msgid "If the event occurs outside business hours, the score is multiplied. Set multiplier to 1.0 to disable."
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.actions.act_window,help:pos_sentinel.action_pos_scoring_rule
+msgid "Create your first scoring rule"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.actions.act_window,help:pos_sentinel.action_pos_scoring_rule
+msgid "Scoring rules define how risk scores are calculated for each type of POS event. Configure base scores and conditional multipliers for amount, frequency, and after-hours triggers."
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.view_pos_sentinel_report_wizard_form
+msgid "Generate Audit Report"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.view_pos_sentinel_report_wizard_form
+msgid "Generate Report"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.view_pos_sentinel_report_wizard_form
+msgid "Cancel"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.report_sentinel_pdf_template
+msgid "POS Sentinel — Audit Report"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.report_sentinel_pdf_template
+msgid "Company:"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.report_sentinel_pdf_template
+msgid "Period:"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.report_sentinel_pdf_template
+msgid "Risk Filter:"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.report_sentinel_pdf_template
+msgid "Total Events"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.report_sentinel_pdf_template
+msgid "records with tampered integrity hash detected."
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.report_sentinel_pdf_template
+msgid "Events by Risk Level"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.report_sentinel_pdf_template
+msgid "Risk Level"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.report_sentinel_pdf_template
+msgid "Count"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.report_sentinel_pdf_template
+msgid "Events by Type"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.report_sentinel_pdf_template
+msgid "Event Type"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.report_sentinel_pdf_template
+msgid "Events by User"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.report_sentinel_pdf_template
+msgid "Events"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.report_sentinel_pdf_template
+msgid "Total Risk Score"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.report_sentinel_pdf_template
+msgid "Generated by POS Sentinel — Behavioral Fraud Detection"
+msgstr ""
+
+#. module: pos_sentinel
+#: model_terms:ir.ui.view,arch_db:pos_sentinel.view_pos_scoring_rule_form
+msgid "e.g. Void Line - High Amount"
+msgstr ""
