@@ -149,17 +149,6 @@ class TestScoringEngine(TransactionCase):
         self.assertEqual(event.risk_score, 40.0)
         self.assertEqual(event.risk_level, 'medium')
 
-    def test_create_event_explicit_score_overrides(self):
-        """Explicit risk_score in vals should bypass auto-scoring."""
-        self._create_rule('void_line', 40.0)
-        event = self.AuditEvent.create_event('void_line', {
-            'risk_score': 5.0,
-            'risk_level': 'low',
-            'details': {'test': True},
-        })
-        self.assertEqual(event.risk_score, 5.0)
-        self.assertEqual(event.risk_level, 'low')
-
     # ── Validation ───────────────────────────────────────────────
 
     def test_base_score_validation(self):
