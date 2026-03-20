@@ -2,6 +2,8 @@
 
 import logging
 
+import pytz
+
 from odoo import api, fields, models, _
 from odoo.exceptions import ValidationError
 
@@ -217,7 +219,6 @@ class PosScoringEngine(models.AbstractModel):
     @api.model
     def _is_after_hours(self, rule):
         """Check if current time is outside business hours (company timezone)."""
-        import pytz
         now_utc = fields.Datetime.now()
         tz_name = self.env.company.partner_id.tz or self.env.user.tz or 'UTC'
         try:
