@@ -4,6 +4,7 @@ import logging
 from datetime import timedelta
 
 from odoo import api, fields, models
+from odoo.exceptions import AccessError
 
 _logger = logging.getLogger(__name__)
 
@@ -18,6 +19,7 @@ class PosSentinelDashboard(models.AbstractModel):
 
         Uses raw SQL for performance on large datasets.
         All queries are company-scoped to prevent multi-company data leaks.
+        Requires POS Auditor or Security Manager group.
 
         Args:
             date_from: ISO date string (default: 30 days ago)
@@ -27,6 +29,11 @@ class PosSentinelDashboard(models.AbstractModel):
             dict with keys: summary, by_type, by_risk, by_day, by_user,
                            top_products, integrity, recent_critical
         """
+        if not self.env.user.has_group('pos_sentinel.group_pos_auditor'):
+            raise AccessError(
+                "You need the POS Auditor or Security Manager role to access "
+                "the POS Sentinel dashboard."
+            )
         now = fields.Datetime.now()
         if date_from:
             dt_from = fields.Datetime.from_string(date_from)

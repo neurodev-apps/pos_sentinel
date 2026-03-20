@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import hashlib
 import hmac
 import json
 import logging
@@ -51,7 +50,7 @@ class PosAuditEvent(models.Model):
     _name = 'pos.audit.event'
     _description = 'POS Audit Event'
     _order = 'create_date DESC, id DESC'
-    _rec_name = 'display_name'
+    _rec_name = 'event_label'
 
     # ── Core fields ──────────────────────────────────────────────
     event_type = fields.Selection(
@@ -163,18 +162,19 @@ class PosAuditEvent(models.Model):
     )
 
     # ── Display ──────────────────────────────────────────────────
-    display_name = fields.Char(
-        compute='_compute_display_name',
+    event_label = fields.Char(
+        string='Event Label',
+        compute='_compute_event_label',
         store=True,
     )
 
     @api.depends('event_type', 'create_date', 'user_id')
-    def _compute_display_name(self):
+    def _compute_event_label(self):
         type_map = dict(EVENT_TYPES)
         for rec in self:
             date_str = rec.create_date.strftime('%Y-%m-%d %H:%M') if rec.create_date else ''
             user_name = rec.user_id.name or ''
-            rec.display_name = f"[{type_map.get(rec.event_type, '')}] {user_name} — {date_str}"
+            rec.event_label = f"[{type_map.get(rec.event_type, '')}] {user_name} — {date_str}"
 
     # ── Immutability: triple-layer protection ────────────────────
 
@@ -362,7 +362,6 @@ class PosAuditEvent(models.Model):
         results for the dashboard.
         """
         date_from = fields.Datetime.now() - timedelta(days=7)
-        salt = get_sentinel_salt(self.env)
         company_ids = self.env.companies.ids
 
         if not company_ids:
@@ -390,15 +389,15 @@ class PosAuditEvent(models.Model):
                 (log_id, user_id, event_type, session_id, order_id,
                  create_date, details, stored_hash) = row
 
-                date_str = (
-                    create_date.strftime('%Y-%m-%d %H:%M:%S')
-                    if create_date else ''
+                expected = compute_event_hash(
+                    self.env,
+                    user_id=user_id,
+                    event_type=event_type,
+                    pos_session_id=session_id or 0,
+                    pos_order_id=order_id or 0,
+                    create_date=create_date,
+                    details=details or '',
                 )
-                hash_input = (
-                    f"{user_id}|{event_type}|{session_id or 0}|{order_id or 0}"
-                    f"|{date_str}|{details or ''}|{salt}"
-                )
-                expected = hashlib.sha256(hash_input.encode('utf-8')).hexdigest()
                 if not hmac.compare_digest(stored_hash or '', expected):
                     tampered_ids.append(log_id)
                     _logger.warning(

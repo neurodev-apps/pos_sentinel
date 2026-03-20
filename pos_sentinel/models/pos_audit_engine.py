@@ -4,6 +4,7 @@ import hashlib
 import logging
 import secrets
 import threading
+from datetime import datetime as dt
 
 _logger = logging.getLogger(__name__)
 
@@ -63,7 +64,6 @@ def compute_event_hash(env, user_id, event_type, pos_session_id, pos_order_id,
         64-char hex SHA-256 digest.
     """
     salt = get_sentinel_salt(env)
-    from datetime import datetime as dt
     if isinstance(create_date, dt):
         date_str = create_date.strftime('%Y-%m-%d %H:%M:%S')
     elif create_date is None:

@@ -26,9 +26,9 @@ class PosSession(models.Model):
             _logger.warning("POS Sentinel: failed to log session_open: %s", e)
         return result
 
-    def try_cash_in_out(self, _type, amount, reason, extras):
+    def try_cash_in_out(self, _type, amount, reason, partner_id, extras):
         """Capture cash_in / cash_out events with actual amount and direction."""
-        result = super().try_cash_in_out(_type, amount, reason, extras)
+        result = super().try_cash_in_out(_type, amount, reason, partner_id, extras)
         try:
             event_type = 'cash_in' if _type == 'in' else 'cash_out'
             self.env['pos.audit.event'].sudo().create_event(event_type, {
