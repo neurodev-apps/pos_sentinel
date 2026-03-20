@@ -1,14 +1,21 @@
 /** @odoo-module */
 
 /**
- * POS Sentinel — Shadow Logger
+ * POS Sentinel — Shadow Logger (Odoo 17)
  *
- * Patches POS models (PosOrder, PosOrderline) and components (PosStore,
- * PaymentScreen) to silently capture fraud-relevant events.
+ * Patches POS models and components to silently capture fraud-relevant events.
  *
- * POS models (PosOrder, PosOrderline) don't have access to env.services,
- * so we use window.__posSentinel (set by sentinel_service.js).
- * POS components (PosStore, PaymentScreen) use this.env.services.
+ * Odoo 17 naming conventions:
+ * - Order class (not PosOrder) from @point_of_sale/app/store/models
+ * - Orderline class (not PosOrderline) from @point_of_sale/app/store/models
+ * - PosStore from @point_of_sale/app/store/pos_store
+ * - PaymentScreen from @point_of_sale/app/screens/payment_screen/payment_screen
+ * - Methods: removeOrderline (camelCase), add_paymentline/remove_paymentline (snake_case)
+ * - Orderline methods: set_quantity, set_unit_price, set_discount (snake_case)
+ * - Orderline parent: this.order (not order_id)
+ * - Order total: get_total_with_tax() (not priceIncl)
+ * - Refund: _isRefundOrder() (not isRefund)
+ * - PosStore: removeOrder (singular), closePos (not closeSession)
  *
  * Design principles:
  * - Fire-and-forget: errors never block the POS UI
@@ -17,9 +24,8 @@
  */
 
 import { patch } from "@web/core/utils/patch";
-import { PosOrder } from "@point_of_sale/app/models/pos_order";
-import { PosOrderline } from "@point_of_sale/app/models/pos_order_line";
-import { PosStore } from "@point_of_sale/app/services/pos_store";
+import { Order, Orderline } from "@point_of_sale/app/store/models";
+import { PosStore } from "@point_of_sale/app/store/pos_store";
 import { PaymentScreen } from "@point_of_sale/app/screens/payment_screen/payment_screen";
 
 // ─── Helpers ─────────────────────────────────────────────────────
@@ -29,23 +35,25 @@ function sentinel() {
     return window.__posSentinel || null;
 }
 
-/** Extract POS context from a model instance */
+/** Extract POS context from a model instance (order or orderline) */
 function ctx(obj) {
     try {
-        const order = obj.order_id || obj;
+        // v17: Orderline uses this.order (not order_id)
+        const order = obj.order || obj;
         return {
-            pos_session_id: order.session?.id ?? false,
-            pos_config_id: order.config?.id ?? false,
+            pos_session_id: order.pos_session_id || false,
+            pos_config_id: order.pos?.config?.id ?? false,
         };
     } catch {
         return { pos_session_id: false, pos_config_id: false };
     }
 }
 
-// ─── PosOrder patches ────────────────────────────────────────────
-patch(PosOrder.prototype, {
+// ─── Order patches ──────────────────────────────────────────────
+patch(Order.prototype, {
     /**
      * Capture: line removal (void)
+     * v17: removeOrderline is camelCase
      */
     removeOrderline(line) {
         const s = sentinel();
@@ -54,12 +62,12 @@ patch(PosOrder.prototype, {
                 s.logEvent("void_line", {
                     ...ctx(this),
                     pos_order_id: this.id || false,
-                    product_id: line.product_id?.id || false,
-                    amount: (line.price_unit || 0) * (line.qty || 0),
+                    product_id: line.product?.id || false,
+                    amount: (line.price || 0) * (line.quantity || 0),
                     details: {
-                        product_name: line.getFullProductName?.() || "",
-                        qty: line.qty || 0,
-                        price_unit: line.price_unit || 0,
+                        product_name: line.get_full_product_name?.() || "",
+                        qty: line.quantity || 0,
+                        price_unit: line.price || 0,
                         discount: line.discount || 0,
                         order_name: this.name || "",
                     },
@@ -73,8 +81,9 @@ patch(PosOrder.prototype, {
 
     /**
      * Capture: payment line removal
+     * v17: remove_paymentline is snake_case
      */
-    removePaymentline(line) {
+    remove_paymentline(line) {
         const s = sentinel();
         if (s && line) {
             try {
@@ -84,7 +93,7 @@ patch(PosOrder.prototype, {
                     amount: line.amount || 0,
                     details: {
                         action: "remove_payment",
-                        payment_method: line.payment_method_id?.name || "",
+                        payment_method: line.payment_method?.name || "",
                         amount: line.amount || 0,
                         order_name: this.name || "",
                     },
@@ -93,14 +102,15 @@ patch(PosOrder.prototype, {
                 console.warn("[POS Sentinel] payment_change error:", e);
             }
         }
-        return super.removePaymentline(...arguments);
+        return super.remove_paymentline(...arguments);
     },
 
     /**
      * Capture: payment line added
+     * v17: add_paymentline is snake_case
      */
-    addPaymentline(payment_method) {
-        const result = super.addPaymentline(...arguments);
+    add_paymentline(payment_method) {
+        const result = super.add_paymentline(...arguments);
         const s = sentinel();
         if (s) {
             try {
@@ -122,30 +132,31 @@ patch(PosOrder.prototype, {
     },
 });
 
-// ─── PosOrderline patches ────────────────────────────────────────
-patch(PosOrderline.prototype, {
+// ─── Orderline patches ──────────────────────────────────────────
+patch(Orderline.prototype, {
     /**
      * Capture: quantity changes
+     * v17: set_quantity is snake_case, parent is this.order
      */
-    setQuantity(quantity, keep_price) {
-        const oldQty = this.qty;
-        const result = super.setQuantity(...arguments);
+    set_quantity(quantity, keep_price) {
+        const oldQty = this.quantity;
+        const result = super.set_quantity(...arguments);
         const s = sentinel();
 
-        if (s && oldQty !== this.qty) {
+        if (s && oldQty !== this.quantity) {
             try {
-                const eventType = this.qty < 0 ? "negative_qty" : "line_qty_change";
+                const eventType = this.quantity < 0 ? "negative_qty" : "line_qty_change";
                 s.logEvent(eventType, {
                     ...ctx(this),
-                    pos_order_id: this.order_id?.id || false,
-                    product_id: this.product_id?.id || false,
-                    amount: (this.price_unit || 0) * (this.qty || 0),
+                    pos_order_id: this.order?.id || false,
+                    product_id: this.product?.id || false,
+                    amount: (this.price || 0) * (this.quantity || 0),
                     details: {
-                        product_name: this.getFullProductName?.() || "",
+                        product_name: this.get_full_product_name?.() || "",
                         old_qty: oldQty,
-                        new_qty: this.qty,
-                        price_unit: this.price_unit || 0,
-                        order_name: this.order_id?.name || "",
+                        new_qty: this.quantity,
+                        price_unit: this.price || 0,
+                        order_name: this.order?.name || "",
                     },
                 });
             } catch (e) {
@@ -157,29 +168,28 @@ patch(PosOrderline.prototype, {
 
     /**
      * Capture: manual price overrides
+     * v17: set_unit_price is snake_case
      */
-    setUnitPrice(price) {
-        const oldPrice = this.price_unit;
-        super.setUnitPrice(...arguments);
+    set_unit_price(price) {
+        const oldPrice = this.price;
+        super.set_unit_price(...arguments);
         const s = sentinel();
 
-        // Only log meaningful price changes (not initial setup)
-        if (s && oldPrice !== undefined && oldPrice !== this.price_unit) {
+        if (s && oldPrice !== undefined && oldPrice !== this.price) {
             try {
-                const diff = Math.abs(oldPrice - this.price_unit);
+                const diff = Math.abs(oldPrice - this.price);
                 if (diff > 0.01) {
                     s.logEvent("price_override", {
                         ...ctx(this),
-                        pos_order_id: this.order_id?.id || false,
-                        product_id: this.product_id?.id || false,
-                        amount: this.price_unit || 0,
+                        pos_order_id: this.order?.id || false,
+                        product_id: this.product?.id || false,
+                        amount: this.price || 0,
                         details: {
-                            product_name: this.getFullProductName?.() || "",
+                            product_name: this.get_full_product_name?.() || "",
                             old_price: oldPrice,
-                            new_price: this.price_unit,
-                            qty: this.qty || 0,
-                            price_type: this.price_type || "original",
-                            order_name: this.order_id?.name || "",
+                            new_price: this.price,
+                            qty: this.quantity || 0,
+                            order_name: this.order?.name || "",
                         },
                     });
                 }
@@ -191,26 +201,27 @@ patch(PosOrderline.prototype, {
 
     /**
      * Capture: discount changes
+     * v17: set_discount is snake_case
      */
-    setDiscount(discount) {
+    set_discount(discount) {
         const oldDiscount = this.discount;
-        super.setDiscount(...arguments);
+        super.set_discount(...arguments);
         const s = sentinel();
 
         if (s && oldDiscount !== this.discount && this.discount > 0) {
             try {
                 s.logEvent("discount", {
                     ...ctx(this),
-                    pos_order_id: this.order_id?.id || false,
-                    product_id: this.product_id?.id || false,
-                    amount: (this.price_unit || 0) * (this.qty || 0) * ((this.discount || 0) / 100),
+                    pos_order_id: this.order?.id || false,
+                    product_id: this.product?.id || false,
+                    amount: (this.price || 0) * (this.quantity || 0) * ((this.discount || 0) / 100),
                     details: {
-                        product_name: this.getFullProductName?.() || "",
+                        product_name: this.get_full_product_name?.() || "",
                         old_discount: oldDiscount || 0,
                         new_discount: this.discount,
-                        price_unit: this.price_unit || 0,
-                        qty: this.qty || 0,
-                        order_name: this.order_id?.name || "",
+                        price_unit: this.price || 0,
+                        qty: this.quantity || 0,
+                        order_name: this.order?.name || "",
                     },
                 });
             } catch (e) {
@@ -223,46 +234,46 @@ patch(PosOrderline.prototype, {
 // ─── PosStore patches (has env.services) ─────────────────────────
 patch(PosStore.prototype, {
     /**
-     * Capture: order deletion (batch)
+     * Capture: order removal
+     * v17: removeOrder (singular, not deleteOrders batch)
      */
-    async deleteOrders(orders, serverIds = [], ignoreChange = false) {
+    removeOrder(order, removeFromServer) {
         const s = this.env?.services?.pos_sentinel || sentinel();
-        if (s && orders?.length) {
-            for (const order of orders) {
-                try {
-                    s.logEvent("order_delete", {
-                        pos_session_id: this.session?.id ?? false,
-                        pos_config_id: this.config?.id ?? false,
-                        pos_order_id: order.id || false,
-                        amount: order.priceIncl || 0,
-                        details: {
-                            order_name: order.name || "",
-                            line_count: order.lines?.length || 0,
-                            state: order.state || "",
-                            partner: order.partner_id?.name || "",
-                        },
-                    });
-                } catch (e) {
-                    console.warn("[POS Sentinel] order_delete error:", e);
-                }
+        if (s && order) {
+            try {
+                s.logEvent("order_delete", {
+                    pos_session_id: this.pos_session?.id ?? false,
+                    pos_config_id: this.config?.id ?? false,
+                    pos_order_id: order.id || false,
+                    amount: order.get_total_with_tax?.() || 0,
+                    details: {
+                        order_name: order.name || "",
+                        line_count: order.get_orderlines?.()?.length || 0,
+                        state: order.state || "",
+                        partner: order.get_partner?.()?.name || "",
+                    },
+                });
+            } catch (e) {
+                console.warn("[POS Sentinel] order_delete error:", e);
             }
         }
-        return await super.deleteOrders(...arguments);
+        return super.removeOrder(...arguments);
     },
 
     /**
      * Capture: session close + flush pending events
+     * v17: closePos (not closeSession)
      */
-    async closeSession() {
+    async closePos() {
         const s = this.env?.services?.pos_sentinel || sentinel();
         if (s) {
             try {
                 s.logEvent("session_close", {
-                    pos_session_id: this.session?.id ?? false,
+                    pos_session_id: this.pos_session?.id ?? false,
                     pos_config_id: this.config?.id ?? false,
                     details: {
-                        session_name: this.session?.name || "",
-                        cashier: this.getCashier?.()?.name || "",
+                        session_name: this.pos_session?.name || "",
+                        cashier: this.get_cashier?.()?.name || "",
                     },
                 });
                 await s.flushNow();
@@ -270,7 +281,7 @@ patch(PosStore.prototype, {
                 console.warn("[POS Sentinel] session_close error:", e);
             }
         }
-        return await super.closeSession(...arguments);
+        return await super.closePos(...arguments);
     },
 });
 
@@ -278,24 +289,25 @@ patch(PosStore.prototype, {
 patch(PaymentScreen.prototype, {
     /**
      * Capture: order validation (payment completed / refund)
+     * v17: validateOrder is camelCase, _isRefundOrder() for refund detection
      */
     async validateOrder(isForceValidate = false) {
         const s = this.env?.services?.pos_sentinel || sentinel();
         const order = this.currentOrder;
         if (s && order) {
             try {
-                const isRefund = order.isRefund;
+                const isRefund = order._isRefundOrder?.() || false;
                 s.logEvent(isRefund ? "refund" : "order_complete", {
-                    pos_session_id: order.session?.id ?? false,
-                    pos_config_id: order.config?.id ?? false,
+                    pos_session_id: order.pos_session_id || false,
+                    pos_config_id: order.pos?.config?.id ?? false,
                     pos_order_id: order.id || false,
-                    amount: order.priceIncl || 0,
+                    amount: order.get_total_with_tax?.() || 0,
                     details: {
                         order_name: order.name || "",
-                        line_count: order.lines?.length || 0,
-                        total: order.priceIncl || 0,
-                        is_refund: isRefund || false,
-                        partner: order.partner_id?.name || "",
+                        line_count: order.get_orderlines?.()?.length || 0,
+                        total: order.get_total_with_tax?.() || 0,
+                        is_refund: isRefund,
+                        partner: order.get_partner?.()?.name || "",
                         force_validate: isForceValidate,
                     },
                 });
