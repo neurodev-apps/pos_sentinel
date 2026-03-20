@@ -1,14 +1,16 @@
 /** @odoo-module */
 
 /**
- * POS Sentinel — Shadow Logger
+ * POS Sentinel — Shadow Logger (Odoo 18)
  *
  * Patches POS models (PosOrder, PosOrderline) and components (PosStore,
  * PaymentScreen) to silently capture fraud-relevant events.
  *
- * POS models (PosOrder, PosOrderline) don't have access to env.services,
- * so we use window.__posSentinel (set by sentinel_service.js).
- * POS components (PosStore, PaymentScreen) use this.env.services.
+ * Odoo 18 naming conventions:
+ * - PosOrder: removeOrderline (camelCase), add_paymentline/remove_paymentline (snake_case)
+ * - PosOrderline: set_quantity, set_unit_price, set_discount (snake_case)
+ * - PosStore: at @point_of_sale/app/store/pos_store, deleteOrders, closeSession
+ * - PaymentScreen: validateOrder (camelCase)
  *
  * Design principles:
  * - Fire-and-forget: errors never block the POS UI
@@ -19,7 +21,7 @@
 import { patch } from "@web/core/utils/patch";
 import { PosOrder } from "@point_of_sale/app/models/pos_order";
 import { PosOrderline } from "@point_of_sale/app/models/pos_order_line";
-import { PosStore } from "@point_of_sale/app/services/pos_store";
+import { PosStore } from "@point_of_sale/app/store/pos_store";
 import { PaymentScreen } from "@point_of_sale/app/screens/payment_screen/payment_screen";
 
 // ─── Helpers ─────────────────────────────────────────────────────
@@ -29,9 +31,10 @@ function sentinel() {
     return window.__posSentinel || null;
 }
 
-/** Extract POS context from a model instance */
+/** Extract POS context from a model instance (order or orderline) */
 function ctx(obj) {
     try {
+        // v18: PosOrderline uses order_id, PosOrder is obj itself
         const order = obj.order_id || obj;
         return {
             pos_session_id: order.session?.id ?? false,
@@ -46,6 +49,7 @@ function ctx(obj) {
 patch(PosOrder.prototype, {
     /**
      * Capture: line removal (void)
+     * v18: removeOrderline is camelCase
      */
     removeOrderline(line) {
         const s = sentinel();
@@ -57,7 +61,7 @@ patch(PosOrder.prototype, {
                     product_id: line.product_id?.id || false,
                     amount: (line.price_unit || 0) * (line.qty || 0),
                     details: {
-                        product_name: line.getFullProductName?.() || "",
+                        product_name: line.get_full_product_name?.() || "",
                         qty: line.qty || 0,
                         price_unit: line.price_unit || 0,
                         discount: line.discount || 0,
@@ -73,8 +77,9 @@ patch(PosOrder.prototype, {
 
     /**
      * Capture: payment line removal
+     * v18: remove_paymentline is snake_case
      */
-    removePaymentline(line) {
+    remove_paymentline(line) {
         const s = sentinel();
         if (s && line) {
             try {
@@ -93,14 +98,15 @@ patch(PosOrder.prototype, {
                 console.warn("[POS Sentinel] payment_change error:", e);
             }
         }
-        return super.removePaymentline(...arguments);
+        return super.remove_paymentline(...arguments);
     },
 
     /**
      * Capture: payment line added
+     * v18: add_paymentline is snake_case
      */
-    addPaymentline(payment_method) {
-        const result = super.addPaymentline(...arguments);
+    add_paymentline(payment_method) {
+        const result = super.add_paymentline(...arguments);
         const s = sentinel();
         if (s) {
             try {
@@ -126,10 +132,11 @@ patch(PosOrder.prototype, {
 patch(PosOrderline.prototype, {
     /**
      * Capture: quantity changes
+     * v18: set_quantity is snake_case
      */
-    setQuantity(quantity, keep_price) {
+    set_quantity(quantity, keep_price) {
         const oldQty = this.qty;
-        const result = super.setQuantity(...arguments);
+        const result = super.set_quantity(...arguments);
         const s = sentinel();
 
         if (s && oldQty !== this.qty) {
@@ -141,7 +148,7 @@ patch(PosOrderline.prototype, {
                     product_id: this.product_id?.id || false,
                     amount: (this.price_unit || 0) * (this.qty || 0),
                     details: {
-                        product_name: this.getFullProductName?.() || "",
+                        product_name: this.get_full_product_name?.() || "",
                         old_qty: oldQty,
                         new_qty: this.qty,
                         price_unit: this.price_unit || 0,
@@ -157,13 +164,13 @@ patch(PosOrderline.prototype, {
 
     /**
      * Capture: manual price overrides
+     * v18: set_unit_price is snake_case
      */
-    setUnitPrice(price) {
+    set_unit_price(price) {
         const oldPrice = this.price_unit;
-        super.setUnitPrice(...arguments);
+        super.set_unit_price(...arguments);
         const s = sentinel();
 
-        // Only log meaningful price changes (not initial setup)
         if (s && oldPrice !== undefined && oldPrice !== this.price_unit) {
             try {
                 const diff = Math.abs(oldPrice - this.price_unit);
@@ -174,7 +181,7 @@ patch(PosOrderline.prototype, {
                         product_id: this.product_id?.id || false,
                         amount: this.price_unit || 0,
                         details: {
-                            product_name: this.getFullProductName?.() || "",
+                            product_name: this.get_full_product_name?.() || "",
                             old_price: oldPrice,
                             new_price: this.price_unit,
                             qty: this.qty || 0,
@@ -191,10 +198,11 @@ patch(PosOrderline.prototype, {
 
     /**
      * Capture: discount changes
+     * v18: set_discount is snake_case
      */
-    setDiscount(discount) {
+    set_discount(discount) {
         const oldDiscount = this.discount;
-        super.setDiscount(...arguments);
+        super.set_discount(...arguments);
         const s = sentinel();
 
         if (s && oldDiscount !== this.discount && this.discount > 0) {
@@ -205,7 +213,7 @@ patch(PosOrderline.prototype, {
                     product_id: this.product_id?.id || false,
                     amount: (this.price_unit || 0) * (this.qty || 0) * ((this.discount || 0) / 100),
                     details: {
-                        product_name: this.getFullProductName?.() || "",
+                        product_name: this.get_full_product_name?.() || "",
                         old_discount: oldDiscount || 0,
                         new_discount: this.discount,
                         price_unit: this.price_unit || 0,
@@ -234,7 +242,7 @@ patch(PosStore.prototype, {
                         pos_session_id: this.session?.id ?? false,
                         pos_config_id: this.config?.id ?? false,
                         pos_order_id: order.id || false,
-                        amount: order.priceIncl || 0,
+                        amount: order.get_total_with_tax?.() || 0,
                         details: {
                             order_name: order.name || "",
                             line_count: order.lines?.length || 0,
@@ -252,6 +260,7 @@ patch(PosStore.prototype, {
 
     /**
      * Capture: session close + flush pending events
+     * v18: cashier is a direct property
      */
     async closeSession() {
         const s = this.env?.services?.pos_sentinel || sentinel();
@@ -262,7 +271,7 @@ patch(PosStore.prototype, {
                     pos_config_id: this.config?.id ?? false,
                     details: {
                         session_name: this.session?.name || "",
-                        cashier: this.getCashier?.()?.name || "",
+                        cashier: this.cashier?.name || "",
                     },
                 });
                 await s.flushNow();
@@ -278,23 +287,24 @@ patch(PosStore.prototype, {
 patch(PaymentScreen.prototype, {
     /**
      * Capture: order validation (payment completed / refund)
+     * v18: validateOrder is camelCase, _isRefundOrder() for refund detection
      */
     async validateOrder(isForceValidate = false) {
         const s = this.env?.services?.pos_sentinel || sentinel();
         const order = this.currentOrder;
         if (s && order) {
             try {
-                const isRefund = order.isRefund;
+                const isRefund = order._isRefundOrder?.() || false;
                 s.logEvent(isRefund ? "refund" : "order_complete", {
                     pos_session_id: order.session?.id ?? false,
                     pos_config_id: order.config?.id ?? false,
                     pos_order_id: order.id || false,
-                    amount: order.priceIncl || 0,
+                    amount: order.get_total_with_tax?.() || 0,
                     details: {
                         order_name: order.name || "",
                         line_count: order.lines?.length || 0,
-                        total: order.priceIncl || 0,
-                        is_refund: isRefund || false,
+                        total: order.get_total_with_tax?.() || 0,
+                        is_refund: isRefund,
                         partner: order.partner_id?.name || "",
                         force_validate: isForceValidate,
                     },
