@@ -48,9 +48,9 @@
                                 type="object"
                                 class="btn-success"
                                 groups="pos_sentinel.group_pos_security_manager"
-                                attrs="{'invisible': [('is_justified', '=', True)]}"/>
+                                invisible="is_justified"/>
                         <div class="alert alert-success mb-0 py-1 px-3"
-                             attrs="{'invisible': [('is_justified', '=', False)]}">
+                             invisible="not is_justified">
                             <i class="fa fa-check-circle"/> Justified by
                             <field name="justified_by_id" readonly="1" nolabel="1" class="d-inline"/>
                             on <field name="justified_date" readonly="1" nolabel="1" class="d-inline"/>
@@ -107,7 +107,7 @@
                             <field name="details" widget="ace" options="{'mode': 'json'}"/>
                         </page>
                         <page string="Justification" name="justification"
-                              attrs="{'invisible': [('is_justified', '=', False)]}">
+                              invisible="not is_justified">
                             <group>
                                 <field name="justified_by_id" readonly="1"/>
                                 <field name="justified_date" readonly="1"/>
