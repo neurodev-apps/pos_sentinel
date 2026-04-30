@@ -5,123 +5,141 @@
     <div class="o_pos_sentinel_dashboard">
 
         <!-- Header -->
-        <div class="o_sentinel_header d-flex justify-content-between align-items-center p-3 bg-white border-bottom">
-            <div class="d-flex align-items-center gap-3">
-                <h2 class="mb-0">
-                    <i class="fa fa-shield me-2 text-primary"/>POS Sentinel
-                </h2>
-                <span class="badge bg-primary fs-6">Dashboard</span>
-            </div>
+        <div class="o_sentinel_header d-flex justify-content-between align-items-center px-3 py-2">
             <div class="d-flex align-items-center gap-2">
-                <select class="form-select form-select-sm" style="width: auto;"
-                        t-on-change="onPeriodChange">
-                    <option value="7" t-att-selected="state.period === '7'">Last 7 days</option>
-                    <option value="30" t-att-selected="state.period === '30'">Last 30 days</option>
-                    <option value="90" t-att-selected="state.period === '90'">Last 90 days</option>
+                <i class="fa fa-shield fa-lg me-1" style="color:#a78bfa;"/>
+                <h2 class="mb-0 fs-5 fw-bold">POS Sentinel</h2>
+                <span class="badge">Dashboard</span>
+            </div>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <select class="form-select form-select-sm" style="width:auto;" t-on-change="onPeriodChange">
+                    <option value="7"   t-att-selected="state.period === '7'">Last 7 days</option>
+                    <option value="30"  t-att-selected="state.period === '30'">Last 30 days</option>
+                    <option value="90"  t-att-selected="state.period === '90'">Last 90 days</option>
                     <option value="365" t-att-selected="state.period === '365'">Last year</option>
                 </select>
-                <button class="btn btn-sm btn-outline-primary" t-on-click="() => this.loadData()">
-                    <i class="fa fa-refresh"/> Refresh
+                <button class="btn btn-sm" t-on-click="() => this.loadData()">
+                    <i class="fa fa-refresh me-1"/>Refresh
                 </button>
-                <button class="btn btn-sm btn-outline-secondary" t-on-click="onViewEvents">
-                    <i class="fa fa-list"/> View Events
+                <button class="btn btn-sm o_sentinel_btn_export" t-on-click="exportCsv">
+                    <i class="fa fa-download me-1"/>Export CSV
                 </button>
-                <button class="btn btn-sm btn-outline-secondary" t-on-click="onViewRules">
-                    <i class="fa fa-cog"/> Scoring Rules
+                <button class="btn btn-sm" t-on-click="onViewEvents">
+                    <i class="fa fa-list me-1"/>Events
+                </button>
+                <button class="btn btn-sm" t-on-click="onViewRules">
+                    <i class="fa fa-cog me-1"/>Rules
                 </button>
             </div>
         </div>
 
         <!-- Loading -->
-        <div t-if="state.loading" class="text-center p-5">
-            <i class="fa fa-spinner fa-spin fa-3x text-muted"/>
+        <div t-if="state.loading" class="text-center p-5 flex-grow-1">
+            <i class="fa fa-spinner fa-spin fa-3x" style="color:#7C3AED;"/>
             <p class="mt-3 text-muted">Loading dashboard data...</p>
         </div>
 
-        <div t-if="!state.loading and state.data" class="p-3">
+        <div t-if="!state.loading and state.data" class="p-3 flex-grow-1">
 
-            <!-- Summary Cards -->
+            <!-- KPI Cards -->
             <div class="row g-3 mb-4">
+
+                <!-- Total Events -->
                 <div class="col-lg-3 col-md-6">
-                    <div class="card border-0 shadow-sm h-100">
-                        <div class="card-body text-center">
-                            <h6 class="card-subtitle text-muted">Total Events</h6>
-                            <h2 class="card-title mt-2 mb-0 text-primary">
+                    <div class="card o_sentinel_kpi_card h-100" style="border-top-color:#7C3AED !important;">
+                        <div class="card-body text-center py-3">
+                            <div class="text-muted small mb-1">Total Events</div>
+                            <div class="o_kpi_value" style="color:#7C3AED;">
                                 <t t-esc="summary.total || 0"/>
-                            </h2>
+                            </div>
+                            <t t-set="delta" t-value="getDelta('total')"/>
+                            <div t-if="delta" class="o_kpi_delta mt-1">
+                                <span t-attf-class="#{delta.up ? 'text-danger' : 'text-success'}">
+                                    <i t-attf-class="fa fa-arrow-#{delta.up ? 'up' : 'down'} me-1"/>
+                                    <t t-esc="delta.pct"/>% vs prev period
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
+
+                <!-- Critical + High -->
                 <div class="col-lg-3 col-md-6">
-                    <div class="card border-0 shadow-sm h-100"
-                         t-attf-style="border-left: 4px solid #DC3545 !important;">
-                        <div class="card-body text-center">
-                            <h6 class="card-subtitle text-muted">Critical + High</h6>
-                            <h2 class="card-title mt-2 mb-0 text-danger">
+                    <div class="card o_sentinel_kpi_card h-100" style="border-top-color:#DC3545 !important;">
+                        <div class="card-body text-center py-3">
+                            <div class="text-muted small mb-1">Critical + High</div>
+                            <div class="o_kpi_value text-danger">
                                 <t t-esc="(summary.critical || 0) + (summary.high || 0)"/>
-                            </h2>
-                            <small class="text-muted">
-                                <span class="text-danger"><t t-esc="summary.critical || 0"/> critical</span>
-                                ·
-                                <span class="text-warning"><t t-esc="summary.high || 0"/> high</span>
-                            </small>
+                            </div>
+                            <div class="small text-muted mt-1">
+                                <span class="text-danger fw-semibold"><t t-esc="summary.critical || 0"/> critical</span>
+                                <span class="mx-1">·</span>
+                                <span style="color:#FD7E14;" class="fw-semibold"><t t-esc="summary.high || 0"/> high</span>
+                            </div>
+                            <t t-set="deltaRisk" t-value="getCriticalHighDelta()"/>
+                            <div t-if="deltaRisk" class="o_kpi_delta mt-1">
+                                <span t-attf-class="#{deltaRisk.up ? 'text-danger' : 'text-success'}">
+                                    <i t-attf-class="fa fa-arrow-#{deltaRisk.up ? 'up' : 'down'} me-1"/>
+                                    <t t-esc="deltaRisk.pct"/>% vs prev period
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
+
+                <!-- Avg Score -->
                 <div class="col-lg-3 col-md-6">
-                    <div class="card border-0 shadow-sm h-100">
-                        <div class="card-body text-center">
-                            <h6 class="card-subtitle text-muted">Avg Risk Score</h6>
-                            <h2 class="card-title mt-2 mb-0">
+                    <div class="card o_sentinel_kpi_card h-100" style="border-top-color:#F59E0B !important;">
+                        <div class="card-body text-center py-3">
+                            <div class="text-muted small mb-1">Avg Risk Score</div>
+                            <div class="o_kpi_value" style="color:#B45309;">
                                 <t t-esc="formatScore(summary.avg_score)"/>
-                            </h2>
+                            </div>
+                            <t t-set="deltaScore" t-value="getDelta('avg_score')"/>
+                            <div t-if="deltaScore" class="o_kpi_delta mt-1">
+                                <span t-attf-class="#{deltaScore.up ? 'text-danger' : 'text-success'}">
+                                    <i t-attf-class="fa fa-arrow-#{deltaScore.up ? 'up' : 'down'} me-1"/>
+                                    <t t-esc="deltaScore.pct"/>% vs prev period
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
+
+                <!-- Integrity -->
                 <div class="col-lg-3 col-md-6">
-                    <div t-attf-class="card border-0 shadow-sm h-100 #{integrity.tampered_count > 0 ? 'bg-danger bg-opacity-10' : ''}">
-                        <div class="card-body text-center">
-                            <h6 class="card-subtitle text-muted">
-                                <i class="fa fa-lock me-1"/>Integrity
-                            </h6>
-                            <h2 t-if="integrity.tampered_count == 0"
-                                class="card-title mt-2 mb-0 text-success">
-                                <i class="fa fa-check-circle"/> OK
-                            </h2>
-                            <h2 t-else="" class="card-title mt-2 mb-0 text-danger">
+                    <div t-attf-class="card o_sentinel_kpi_card h-100 #{integrity.tampered_count > 0 ? 'bg-danger bg-opacity-10' : ''}"
+                         style="border-top-color:#22C55E !important;">
+                        <div class="card-body text-center py-3">
+                            <div class="text-muted small mb-1"><i class="fa fa-lock me-1"/>Integrity</div>
+                            <div t-if="integrity.tampered_count == 0" class="o_kpi_value text-success">
+                                <i class="fa fa-check-circle"/>
+                            </div>
+                            <div t-else="" class="o_kpi_value text-danger fs-4">
                                 <t t-esc="integrity.tampered_count"/> TAMPERED
-                            </h2>
-                            <small class="text-muted" t-if="integrity.last_check">
-                                Last check: <t t-esc="formatDate(integrity.last_check)"/>
-                            </small>
-                            <small class="text-muted" t-else="">
-                                No integrity check yet
-                            </small>
+                            </div>
+                            <div class="small text-muted mt-1" t-if="integrity.last_check">
+                                Checked: <t t-esc="formatDate(integrity.last_check)"/>
+                            </div>
+                            <div class="small text-muted mt-1" t-else="">No integrity check yet</div>
                         </div>
                     </div>
                 </div>
+
             </div>
 
             <!-- Charts Row 1 -->
             <div class="row g-3 mb-4">
                 <div class="col-lg-8">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-header bg-white">
-                            <h6 class="mb-0"><i class="fa fa-line-chart me-2"/>Events Over Time</h6>
-                        </div>
-                        <div class="card-body" style="height: 300px;">
-                            <canvas t-ref="chartByDay"/>
-                        </div>
+                    <div class="card">
+                        <div class="card-header"><i class="fa fa-line-chart me-2" style="color:#7C3AED;"/>Events Over Time</div>
+                        <div class="card-body" style="height:280px;"><canvas t-ref="chartByDay"/></div>
                     </div>
                 </div>
                 <div class="col-lg-4">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-header bg-white">
-                            <h6 class="mb-0"><i class="fa fa-pie-chart me-2"/>By Event Type</h6>
-                        </div>
-                        <div class="card-body" style="height: 300px;">
-                            <canvas t-ref="chartByType"/>
-                        </div>
+                    <div class="card">
+                        <div class="card-header"><i class="fa fa-pie-chart me-2" style="color:#7C3AED;"/>By Event Type</div>
+                        <div class="card-body" style="height:280px;"><canvas t-ref="chartByType"/></div>
                     </div>
                 </div>
             </div>
@@ -129,42 +147,81 @@
             <!-- Charts Row 2 -->
             <div class="row g-3 mb-4">
                 <div class="col-lg-4">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-header bg-white">
-                            <h6 class="mb-0"><i class="fa fa-bar-chart me-2"/>By Risk Level</h6>
-                        </div>
-                        <div class="card-body" style="height: 280px;">
-                            <canvas t-ref="chartByRisk"/>
-                        </div>
+                    <div class="card">
+                        <div class="card-header"><i class="fa fa-bar-chart me-2" style="color:#7C3AED;"/>By Risk Level</div>
+                        <div class="card-body" style="height:260px;"><canvas t-ref="chartByRisk"/></div>
                     </div>
                 </div>
                 <div class="col-lg-8">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-header bg-white">
-                            <h6 class="mb-0"><i class="fa fa-users me-2"/>Top Users by Risk Score</h6>
+                    <div class="card">
+                        <div class="card-header"><i class="fa fa-users me-2" style="color:#7C3AED;"/>Top Cashiers by Risk Score</div>
+                        <div class="card-body" style="height:260px;"><canvas t-ref="chartByUser"/></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Heat Map -->
+            <div t-if="heatmapUsers.length" class="row g-3 mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span><i class="fa fa-th me-2" style="color:#7C3AED;"/>Cashier Risk Heatmap — Hour × Cashier</span>
+                            <small class="text-muted">Darker = higher risk score</small>
                         </div>
-                        <div class="card-body" style="height: 280px;">
-                            <canvas t-ref="chartByUser"/>
+                        <div class="card-body">
+                            <div class="o_sentinel_heatmap_wrap">
+                                <table class="o_sentinel_heatmap_table">
+                                    <thead>
+                                        <tr>
+                                            <th class="user-col">Cashier</th>
+                                            <t t-foreach="heatmapHours" t-as="h" t-key="h">
+                                                <th style="width:28px;padding:0 1px 4px;">
+                                                    <span style="font-size:9px;color:#9ca3af;"><t t-esc="h"/>h</span>
+                                                </th>
+                                            </t>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <t t-foreach="heatmapUsers" t-as="user" t-key="user">
+                                            <tr>
+                                                <td class="user-col" t-att-title="user"><t t-esc="user"/></td>
+                                                <t t-foreach="heatmapHours" t-as="h" t-key="h">
+                                                    <td style="padding:2px 1px;">
+                                                        <div class="o_sentinel_heatmap_cell"
+                                                             t-att-style="getHeatmapCellStyle(user, h)"
+                                                             t-att-title="getHeatmapCellTitle(user, h)"/>
+                                                    </td>
+                                                </t>
+                                            </tr>
+                                        </t>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="o_sentinel_heatmap_legend mt-2">
+                                <span>Low</span>
+                                <div class="o_sentinel_heatmap_legend_bar"/>
+                                <span>High</span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Tables Row -->
-            <div class="row g-3">
-                <!-- Recent Critical Events -->
+            <div class="row g-3 mb-4">
+
+                <!-- Live Feed -->
                 <div class="col-lg-8">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-header bg-white d-flex justify-content-between">
-                            <h6 class="mb-0">
-                                <i class="fa fa-exclamation-triangle text-danger me-2"/>
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span>
+                                <span class="o_sentinel_live_dot"/>
+                                <span class="text-danger fw-semibold me-2">LIVE</span>
                                 Recent High-Risk Events
-                            </h6>
-                            <span class="badge bg-danger">
-                                <t t-esc="recentCritical.length"/>
                             </span>
+                            <span class="badge bg-danger rounded-pill"><t t-esc="recentCritical.length"/></span>
                         </div>
-                        <div class="card-body p-0" style="max-height: 350px; overflow-y: auto;">
+                        <div class="card-body p-0" style="max-height:320px;overflow-y:auto;">
                             <table class="table table-sm table-hover mb-0">
                                 <thead class="table-light sticky-top">
                                     <tr>
@@ -172,14 +229,12 @@
                                         <th>Type</th>
                                         <th>User</th>
                                         <th>Risk</th>
-                                        <th>Score</th>
+                                        <th class="text-end">Score</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr t-foreach="recentCritical" t-as="evt" t-key="evt.id">
-                                        <td class="text-nowrap">
-                                            <small><t t-esc="formatDate(evt.create_date)"/></small>
-                                        </td>
+                                        <td class="text-nowrap"><small><t t-esc="formatDate(evt.create_date)"/></small></td>
                                         <td><t t-esc="getEventTypeLabel(evt.event_type)"/></td>
                                         <td><t t-esc="evt.user_name"/></td>
                                         <td>
@@ -187,11 +242,11 @@
                                                 <t t-esc="(evt.risk_level || '').toUpperCase()"/>
                                             </span>
                                         </td>
-                                        <td><t t-esc="formatScore(evt.risk_score)"/></td>
+                                        <td class="text-end fw-semibold"><t t-esc="formatScore(evt.risk_score)"/></td>
                                     </tr>
                                     <tr t-if="!recentCritical.length">
                                         <td colspan="5" class="text-center text-muted py-4">
-                                            <i class="fa fa-check-circle fa-2x mb-2 d-block text-success"/>
+                                            <i class="fa fa-check-circle fa-2x d-block mb-2 text-success"/>
                                             No high-risk events in this period
                                         </td>
                                     </tr>
@@ -203,13 +258,9 @@
 
                 <!-- Top Products -->
                 <div class="col-lg-4">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-header bg-white">
-                            <h6 class="mb-0">
-                                <i class="fa fa-cube me-2"/>Top Products (by risk)
-                            </h6>
-                        </div>
-                        <div class="card-body p-0" style="max-height: 350px; overflow-y: auto;">
+                    <div class="card">
+                        <div class="card-header"><i class="fa fa-cube me-2" style="color:#7C3AED;"/>Top Products (by risk)</div>
+                        <div class="card-body p-0" style="max-height:320px;overflow-y:auto;">
                             <table class="table table-sm table-hover mb-0">
                                 <thead class="table-light sticky-top">
                                     <tr>
@@ -220,24 +271,19 @@
                                 </thead>
                                 <tbody>
                                     <tr t-foreach="topProducts" t-as="prod" t-key="prod_index">
-                                        <td>
-                                            <small><t t-esc="prod.product_name"/></small>
-                                        </td>
+                                        <td><small><t t-esc="prod.product_name"/></small></td>
                                         <td class="text-end"><t t-esc="prod.event_count"/></td>
-                                        <td class="text-end">
-                                            <t t-esc="formatScore(prod.total_score)"/>
-                                        </td>
+                                        <td class="text-end fw-semibold"><t t-esc="formatScore(prod.total_score)"/></td>
                                     </tr>
                                     <tr t-if="!topProducts.length">
-                                        <td colspan="3" class="text-center text-muted py-4">
-                                            No product-related risk events
-                                        </td>
+                                        <td colspan="3" class="text-center text-muted py-4">No product-related risk events</td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
                     </div>
                 </div>
+
             </div>
 
         </div>
