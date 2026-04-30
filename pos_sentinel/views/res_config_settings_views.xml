@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_pos_sentinel_settings" model="ir.ui.view">
+        <field name="name">pos.sentinel.config.settings.form</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="point_of_sale.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//block[@id='pos_iot_box_settings'][last()]" position="after">
+                <block title="POS Sentinel — Real-time Alerts"
+                       name="pos_sentinel_alerts"
+                       help="Send instant notifications when high-risk POS events are detected.">
+                    <setting id="pos_sentinel_alert_enabled"
+                             string="Enable real-time alerts"
+                             help="When enabled, POS Sentinel will notify you immediately by email and/or webhook for any high-risk POS event.">
+                        <field name="pos_sentinel_alert_enabled"/>
+                    </setting>
+                    <setting id="pos_sentinel_alert_threshold"
+                             string="Alert Threshold"
+                             help="Choose the minimum risk level that triggers an alert."
+                             invisible="not pos_sentinel_alert_enabled">
+                        <field name="pos_sentinel_alert_threshold"/>
+                    </setting>
+                    <setting id="pos_sentinel_alert_email_to"
+                             string="Email Recipients"
+                             help="Comma-separated list of email addresses to alert."
+                             invisible="not pos_sentinel_alert_enabled">
+                        <field name="pos_sentinel_alert_email_to"
+                               placeholder="manager@yourcompany.com, owner@yourcompany.com"/>
+                    </setting>
+                    <setting id="pos_sentinel_alert_webhook_url"
+                             string="Webhook URL"
+                             help="Optional. POS Sentinel posts a JSON payload to this URL. Compatible with Slack, Telegram bots, Discord, and Twilio for WhatsApp/SMS."
+                             invisible="not pos_sentinel_alert_enabled">
+                        <field name="pos_sentinel_alert_webhook_url"
+                               placeholder="https://hooks.slack.com/services/..."/>
+                        <field name="pos_sentinel_alert_webhook_format"
+                               string=" "
+                               nolabel="1"/>
+                    </setting>
+                    <setting id="pos_sentinel_test_alert"
+                             string="Test the alert configuration"
+                             help="Send a sample alert to verify your email and webhook setup."
+                             invisible="not pos_sentinel_alert_enabled">
+                        <button string="Send Test Alert"
+                                type="object"
+                                name="action_pos_sentinel_test_alert"
+                                class="btn-primary"
+                                icon="fa-paper-plane"/>
+                    </setting>
+                </block>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

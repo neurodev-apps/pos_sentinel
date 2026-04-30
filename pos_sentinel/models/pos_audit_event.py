@@ -348,10 +348,177 @@ class PosAuditEvent(models.Model):
                 details=details_json,
             )
             record._write_hash(audit_hash)
+
+            # Dispatch real-time alert for high/critical events
+            if record.risk_level in ('high', 'critical'):
+                try:
+                    record._maybe_dispatch_alert()
+                except Exception as e:
+                    _logger.warning("POS Sentinel: alert dispatch failed: %s", e)
+
             return record
         except Exception as e:
             _logger.critical("POS Sentinel: failed to create audit event: %s", e)
             return self.env['pos.audit.event']
+
+    # ── Real-time Alerts (v1.5) ──────────────────────────────────
+
+    def _maybe_dispatch_alert(self):
+        """Dispatch alert via email and/or webhook if configured.
+
+        Called from create_event when risk_level is 'high' or 'critical'.
+        Reads ir.config_parameter for settings.
+
+        Errors are logged but never propagated — alerting is a best-effort
+        side-effect that must never break event creation.
+        """
+        self.ensure_one()
+        ICP = self.env['ir.config_parameter'].sudo()
+
+        if ICP.get_param('pos_sentinel.alert_enabled') != 'True':
+            return
+
+        threshold = ICP.get_param('pos_sentinel.alert_threshold', 'critical')
+        if threshold == 'critical' and self.risk_level != 'critical':
+            return  # only critical alerts allowed
+
+        # Email
+        email_to = ICP.get_param('pos_sentinel.alert_email_to', '')
+        if email_to:
+            try:
+                self._send_alert_email(email_to)
+            except Exception as e:
+                _logger.warning("POS Sentinel: email alert failed: %s", e)
+
+        # Webhook
+        webhook_url = ICP.get_param('pos_sentinel.alert_webhook_url', '')
+        if webhook_url:
+            try:
+                webhook_format = ICP.get_param(
+                    'pos_sentinel.alert_webhook_format', 'generic',
+                )
+                self._send_alert_webhook(webhook_url, webhook_format)
+            except Exception as e:
+                _logger.warning("POS Sentinel: webhook alert failed: %s", e)
+
+    def _send_alert_email(self, email_to):
+        """Send the alert email using the mail.template."""
+        self.ensure_one()
+        template = self.env.ref(
+            'pos_sentinel.email_template_pos_sentinel_alert',
+            raise_if_not_found=False,
+        )
+        if not template:
+            _logger.warning("POS Sentinel: email template not found")
+            return
+        template.with_context(alert_email_to=email_to).send_mail(
+            self.id, force_send=False,
+        )
+
+    def _send_alert_webhook(self, url, fmt='generic'):
+        """POST a JSON payload to the configured webhook.
+
+        Supported formats: generic, slack, telegram, discord. The payload
+        is shaped so that the most common bots/tools accept it as-is.
+        """
+        self.ensure_one()
+        try:
+            import requests
+        except ImportError:
+            _logger.warning("POS Sentinel: 'requests' library not available")
+            return
+
+        type_label = dict(self._fields['event_type'].selection).get(
+            self.event_type, self.event_type,
+        )
+        emoji = '🚨' if self.risk_level == 'critical' else '⚠️'
+        title = f"{emoji} POS Sentinel — {self.risk_level.upper()}"
+        message = (
+            f"*{type_label}* by *{self.user_id.name}* "
+            f"at *{self.pos_config_id.name or 'POS'}*\n"
+            f"Amount: {self.amount or 0:.2f} · Score: {self.risk_score}/100"
+        )
+
+        if fmt == 'slack':
+            payload = {
+                'text': title,
+                'blocks': [
+                    {'type': 'header', 'text': {'type': 'plain_text', 'text': title}},
+                    {'type': 'section', 'text': {'type': 'mrkdwn', 'text': message}},
+                ],
+            }
+        elif fmt == 'telegram':
+            # Telegram bots expect chat_id; we send a generic text payload
+            payload = {
+                'text': f"{title}\n{message}",
+                'parse_mode': 'Markdown',
+            }
+        elif fmt == 'discord':
+            payload = {
+                'content': title,
+                'embeds': [{
+                    'title': type_label,
+                    'description': message,
+                    'color': 15158332 if self.risk_level == 'critical' else 16489728,
+                }],
+            }
+        else:  # generic
+            payload = {
+                'event_id': self.id,
+                'event_type': self.event_type,
+                'risk_level': self.risk_level,
+                'risk_score': self.risk_score,
+                'user': self.user_id.name,
+                'pos_config': self.pos_config_id.name,
+                'amount': self.amount,
+                'currency': self.currency_id.name,
+                'create_date': fields.Datetime.to_string(self.create_date),
+                'company': self.company_id.name,
+                'message': f"{title} — {message}",
+            }
+
+        try:
+            response = requests.post(url, json=payload, timeout=5)
+            response.raise_for_status()
+        except requests.exceptions.RequestException as e:
+            _logger.warning("POS Sentinel: webhook POST failed (%s): %s", url, e)
+
+    @api.model
+    def _send_test_alert(self):
+        """Trigger a test alert with a dummy event for configuration testing."""
+        # Build a transient (non-persisted) record-like object for the test
+        ICP = self.env['ir.config_parameter'].sudo()
+        email_to = ICP.get_param('pos_sentinel.alert_email_to', '')
+        webhook_url = ICP.get_param('pos_sentinel.alert_webhook_url', '')
+
+        if not email_to and not webhook_url:
+            from odoo.exceptions import UserError
+            raise UserError(
+                "Configure at least one alert channel "
+                "(email or webhook) before sending a test."
+            )
+
+        # Find or create a sample critical event for the test
+        sample = self.search([('risk_level', '=', 'critical')], limit=1)
+        if not sample:
+            sample = self.search([('risk_level', '=', 'high')], limit=1)
+        if not sample:
+            sample = self.search([], limit=1)
+        if not sample:
+            from odoo.exceptions import UserError
+            raise UserError(
+                "No POS audit events exist yet. Create at least one event "
+                "before sending a test alert."
+            )
+
+        if email_to:
+            sample._send_alert_email(email_to)
+        if webhook_url:
+            fmt = ICP.get_param(
+                'pos_sentinel.alert_webhook_format', 'generic',
+            )
+            sample._send_alert_webhook(webhook_url, fmt)
+        return True
 
     # ── Batch event logging (called from OWL frontend) ─────────
 
