@@ -39,7 +39,7 @@ Security
     """,
     'author': 'NeuroDev',
     'website': 'https://neurodev.cl',
-    'support': 'neurodev.odoo@gmail.com',
+    'support': 'contacto@neurodev.cl',
     'license': 'OPL-1',
     'price': 249.00,
     'currency': 'USD',
