@@ -186,22 +186,22 @@
         <div class="oe_span12">
             <h3 style="color:#7C3AED;">Monitored POS Events</h3>
             <table class="table table-bordered" style="font-size:14px;">
-                <thead style="background:#7C3AED;color:#fff;">
+                <thead>
                     <tr>
-                        <th>Event</th>
-                        <th>What is captured</th>
-                        <th>Typical risk</th>
+                        <th style="background:#7C3AED;color:#fff;padding:8px 12px;">Event</th>
+                        <th style="background:#7C3AED;color:#fff;padding:8px 12px;">What is captured</th>
+                        <th style="background:#7C3AED;color:#fff;padding:8px 12px;">Typical risk</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr><td><strong>Line Void</strong></td><td>Product, original amount, cashier, timestamp</td><td>Medium - High</td></tr>
-                    <tr><td><strong>Price Override</strong></td><td>Original price vs. manual price, delta %</td><td>High</td></tr>
-                    <tr><td><strong>Excessive Discount</strong></td><td>Discount %, authorization, order total</td><td>High - Critical</td></tr>
-                    <tr><td><strong>Refund / Return</strong></td><td>Refund amount, original order, cashier frequency</td><td>Medium - Critical</td></tr>
-                    <tr><td><strong>Cash Movement</strong></td><td>Cash in / cash out, reason, session context</td><td>Medium - High</td></tr>
-                    <tr><td><strong>Session Anomaly</strong></td><td>Unusual open/close timing, duration outliers</td><td>Low - Medium</td></tr>
-                    <tr><td><strong>Order Deletion</strong></td><td>Full order detail before deletion</td><td>High - Critical</td></tr>
-                    <tr><td><strong>Quantity Change</strong></td><td>Original vs. modified quantity, product, amount delta</td><td>Medium - High</td></tr>
+                    <tr><td style="color:#333;"><strong>Line Void</strong></td><td style="color:#333;">Product, original amount, cashier, timestamp</td><td style="color:#333;">Medium - High</td></tr>
+                    <tr><td style="color:#333;"><strong>Price Override</strong></td><td style="color:#333;">Original price vs. manual price, delta %</td><td style="color:#333;">High</td></tr>
+                    <tr><td style="color:#333;"><strong>Excessive Discount</strong></td><td style="color:#333;">Discount %, authorization, order total</td><td style="color:#333;">High - Critical</td></tr>
+                    <tr><td style="color:#333;"><strong>Refund / Return</strong></td><td style="color:#333;">Refund amount, original order, cashier frequency</td><td style="color:#333;">Medium - Critical</td></tr>
+                    <tr><td style="color:#333;"><strong>Cash Movement</strong></td><td style="color:#333;">Cash in / cash out, reason, session context</td><td style="color:#333;">Medium - High</td></tr>
+                    <tr><td style="color:#333;"><strong>Session Anomaly</strong></td><td style="color:#333;">Unusual open/close timing, duration outliers</td><td style="color:#333;">Low - Medium</td></tr>
+                    <tr><td style="color:#333;"><strong>Order Deletion</strong></td><td style="color:#333;">Full order detail before deletion</td><td style="color:#333;">High - Critical</td></tr>
+                    <tr><td style="color:#333;"><strong>Quantity Change</strong></td><td style="color:#333;">Original vs. modified quantity, product, amount delta</td><td style="color:#333;">Medium - High</td></tr>
                 </tbody>
             </table>
         </div>
@@ -213,16 +213,19 @@
         <div class="oe_span12">
             <h3 style="color:#7C3AED;">Security Architecture</h3>
             <table class="table table-bordered" style="font-size:14px;">
-                <thead style="background:#7C3AED;color:#fff;">
-                    <tr><th>Layer</th><th>Mechanism</th></tr>
+                <thead>
+                    <tr>
+                        <th style="background:#7C3AED;color:#fff;padding:8px 12px;">Layer</th>
+                        <th style="background:#7C3AED;color:#fff;padding:8px 12px;">Mechanism</th>
+                    </tr>
                 </thead>
                 <tbody>
-                    <tr><td><strong>ORM Override</strong></td><td>write(), unlink(), copy() blocked at model level -- raises UserError</td></tr>
-                    <tr><td><strong>ACL</strong></td><td>perm_write=0, perm_unlink=0 for all groups including admin</td></tr>
-                    <tr><td><strong>Record Rules</strong></td><td>Domain-level perm_write=False, perm_unlink=False</td></tr>
-                    <tr><td><strong>Integrity Hash</strong></td><td>SHA-256 with cryptographically-secure dynamic salt -- tamper-evident</td></tr>
-                    <tr><td><strong>Automated Verification</strong></td><td>Weekly scheduled action re-checks all hashes and flags mismatches</td></tr>
-                    <tr><td><strong>Separation of Duties</strong></td><td>POS Auditor (read-only) vs. POS Security Manager (configure rules)</td></tr>
+                    <tr><td style="color:#333;"><strong>ORM Override</strong></td><td style="color:#333;">write(), unlink(), copy() blocked at model level -- raises UserError</td></tr>
+                    <tr><td style="color:#333;"><strong>ACL</strong></td><td style="color:#333;">perm_write=0, perm_unlink=0 for all groups including admin</td></tr>
+                    <tr><td style="color:#333;"><strong>Record Rules</strong></td><td style="color:#333;">Domain-level perm_write=False, perm_unlink=False</td></tr>
+                    <tr><td style="color:#333;"><strong>Integrity Hash</strong></td><td style="color:#333;">SHA-256 with cryptographically-secure dynamic salt -- tamper-evident</td></tr>
+                    <tr><td style="color:#333;"><strong>Automated Verification</strong></td><td style="color:#333;">Weekly scheduled action re-checks all hashes and flags mismatches</td></tr>
+                    <tr><td style="color:#333;"><strong>Separation of Duties</strong></td><td style="color:#333;">POS Auditor (read-only) vs. POS Security Manager (configure rules)</td></tr>
                 </tbody>
             </table>
         </div>
