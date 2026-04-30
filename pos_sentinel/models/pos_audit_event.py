@@ -267,17 +267,49 @@ class PosAuditEvent(models.Model):
 
         # Always use current user — never trust user_id from caller
         user_id = self.env.uid
-        session_id = vals.get('pos_session_id', False)
-        order_id = vals.get('pos_order_id', False)
+
+        # Sanitize Many2one IDs: in Odoo 18 the POS frontend sends local
+        # string IDs like "pos.order_3" before backend sync. We only accept
+        # real integer IDs; otherwise we store the local id in details for
+        # forensic tracing and set the FK to False.
+        def _safe_int_id(v):
+            if isinstance(v, bool):
+                return False
+            if isinstance(v, int):
+                return v
+            if isinstance(v, str) and v.isdigit():
+                return int(v)
+            return False
+
+        session_id_raw = vals.get('pos_session_id', False)
+        order_id_raw = vals.get('pos_order_id', False)
+        config_id_raw = vals.get('pos_config_id', False)
+        product_id_raw = vals.get('product_id', False)
+        employee_id_raw = vals.get('employee_id', False)
+
+        session_id = _safe_int_id(session_id_raw)
+        order_id = _safe_int_id(order_id_raw)
+        config_id = _safe_int_id(config_id_raw)
+        product_id = _safe_int_id(product_id_raw)
+        employee_id = _safe_int_id(employee_id_raw)
+
+        # Preserve original local IDs in details for forensic auditing
+        if isinstance(order_id_raw, str) and not order_id:
+            try:
+                details_dict = json.loads(details_json) if details_json else {}
+            except Exception:
+                details_dict = {}
+            details_dict['_local_pos_order_id'] = order_id_raw
+            details_json = json.dumps(details_dict, ensure_ascii=False, default=str)
 
         create_vals = {
             'event_type': event_type,
             'user_id': user_id,
             'pos_session_id': session_id,
             'pos_order_id': order_id,
-            'pos_config_id': vals.get('pos_config_id', False),
-            'employee_id': vals.get('employee_id', False),
-            'product_id': vals.get('product_id', False),
+            'pos_config_id': config_id,
+            'employee_id': employee_id,
+            'product_id': product_id,
             'amount': vals.get('amount', 0.0),
             'currency_id': vals.get('currency_id', self.env.company.currency_id.id),
             'details': details_json,

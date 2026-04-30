@@ -35,14 +35,26 @@ class PosSentinelDashboard(models.AbstractModel):
                 "the POS Sentinel dashboard."
             )
         now = fields.Datetime.now()
-        if date_from:
-            dt_from = fields.Datetime.from_string(date_from)
-        else:
-            dt_from = now - timedelta(days=30)
-        if date_to:
-            dt_to = fields.Datetime.from_string(date_to)
-        else:
-            dt_to = now
+
+        def _parse_dt(value, fallback):
+            """Accept both Odoo format ('YYYY-MM-DD HH:MM:SS') and ISO 8601
+            ('YYYY-MM-DDTHH:MM:SS.fffZ') sent by JavaScript .toISOString()."""
+            if not value:
+                return fallback
+            if isinstance(value, str):
+                # Strip trailing Z and replace T with space for ISO 8601
+                v = value.replace('T', ' ').rstrip('Z')
+                # Cut milliseconds if present: '2026-04-30 05:18:50.641' -> '2026-04-30 05:18:50'
+                if '.' in v:
+                    v = v.split('.', 1)[0]
+                try:
+                    return fields.Datetime.from_string(v)
+                except Exception:
+                    return fallback
+            return value
+
+        dt_from = _parse_dt(date_from, now - timedelta(days=30))
+        dt_to = _parse_dt(date_to, now)
 
         company_ids = self.env.companies.ids
         if not company_ids:
