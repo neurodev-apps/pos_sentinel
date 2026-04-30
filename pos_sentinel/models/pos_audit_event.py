@@ -411,8 +411,10 @@ class PosAuditEvent(models.Model):
         if not template:
             _logger.warning("POS Sentinel: email template not found")
             return
-        template.with_context(alert_email_to=email_to).send_mail(
-            self.id, force_send=False,
+        template.send_mail(
+            self.id,
+            force_send=True,
+            email_values={'email_to': email_to},
         )
 
     def _send_alert_webhook(self, url, fmt='generic'):
