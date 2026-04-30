@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<data noupdate="1">
+
+    <!-- Email template for critical alerts -->
+    <record id="email_template_pos_sentinel_alert" model="mail.template">
+        <field name="name">POS Sentinel — Critical Alert</field>
+        <field name="model_id" ref="model_pos_audit_event"/>
+        <field name="subject">🚨 POS Sentinel: {{ object.risk_level|upper }} — {{ object.event_type }}</field>
+        <field name="email_from">{{ (user.email_formatted or user.company_id.email_formatted or '') }}</field>
+        <field name="email_to">{{ ctx.get('alert_email_to', '') }}</field>
+        <field name="lang">{{ object.user_id.lang or user.lang }}</field>
+        <field name="auto_delete" eval="True"/>
+        <field name="body_html" type="html">
+<div style="margin:0;padding:0;font-family:Arial,sans-serif;background:#f4f4f4;">
+  <div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+    <div t-attf-style="background:#{{ '#dc3545' if object.risk_level == 'critical' else '#fd7e14' }};color:#fff;padding:24px 32px;">
+      <div style="font-size:14px;letter-spacing:2px;opacity:0.9;">POS SENTINEL ALERT</div>
+      <h1 style="margin:8px 0 0;font-size:24px;line-height:1.2;">
+        <t t-if="object.risk_level == 'critical'">🚨 Critical Risk Detected</t>
+        <t t-else="">⚠️ High Risk Detected</t>
+      </h1>
+      <div style="margin-top:8px;font-size:13px;opacity:0.95;">
+        Score: <b><t t-out="object.risk_score"/>/100</b> · <t t-out="object.create_date"/>
+      </div>
+    </div>
+    <div style="padding:28px 32px;color:#333;">
+      <table style="width:100%;border-collapse:collapse;font-size:14px;">
+        <tr style="border-bottom:1px solid #eee;">
+          <td style="padding:10px 0;color:#666;width:38%;">Event Type</td>
+          <td style="padding:10px 0;font-weight:600;"><t t-out="dict(object._fields['event_type'].selection).get(object.event_type, object.event_type)"/></td>
+        </tr>
+        <tr style="border-bottom:1px solid #eee;">
+          <td style="padding:10px 0;color:#666;">Cashier</td>
+          <td style="padding:10px 0;font-weight:600;"><t t-out="object.user_id.name or '—'"/></td>
+        </tr>
+        <tr style="border-bottom:1px solid #eee;">
+          <td style="padding:10px 0;color:#666;">POS Configuration</td>
+          <td style="padding:10px 0;font-weight:600;"><t t-out="object.pos_config_id.name or '—'"/></td>
+        </tr>
+        <tr style="border-bottom:1px solid #eee;">
+          <td style="padding:10px 0;color:#666;">Amount</td>
+          <td style="padding:10px 0;font-weight:600;color:#dc3545;">
+            <t t-if="object.amount" t-out="object.currency_id.symbol or ''"/>
+            <t t-out="'%.2f' % (object.amount or 0)"/>
+          </td>
+        </tr>
+        <tr style="border-bottom:1px solid #eee;">
+          <td style="padding:10px 0;color:#666;">Company</td>
+          <td style="padding:10px 0;"><t t-out="object.company_id.name or '—'"/></td>
+        </tr>
+      </table>
+      <div style="margin-top:24px;padding:14px 18px;background:#fff8e1;border-left:4px solid #ffa726;border-radius:4px;font-size:13px;color:#5d4037;">
+        <b>Recommendation:</b> Review this event in the POS Sentinel dashboard
+        and contact the cashier if needed. The event is permanently recorded
+        in an immutable, SHA-256 signed audit log.
+      </div>
+      <div style="margin-top:24px;text-align:center;">
+        <a t-attf-href="/odoo/action-pos_sentinel.action_pos_audit_event/{{ object.id }}"
+           style="display:inline-block;background:#875A7B;color:#fff;padding:12px 28px;text-decoration:none;border-radius:6px;font-weight:600;">
+          View Event in Dashboard
+        </a>
+      </div>
+    </div>
+    <div style="padding:16px 32px;background:#fafafa;color:#999;font-size:11px;text-align:center;border-top:1px solid #eee;">
+      POS Sentinel — Behavioral Fraud Detection · NeuroDev<br/>
+      <a href="https://neurodev.cl" style="color:#875A7B;text-decoration:none;">neurodev.cl</a>
+    </div>
+  </div>
+</div>
+        </field>
+    </record>
+
+</data>
+</odoo>
