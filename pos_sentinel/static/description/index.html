@@ -1,8 +1,20 @@
 <section class="oe_container">
     <div class="oe_row oe_spaced">
-        <div class="oe_span12">
-            <h2 class="oe_slogan" style="color: #875A7B;">POS Sentinel</h2>
-            <h3 class="oe_slogan">Behavioral Fraud Detection for Odoo POS</h3>
+        <div class="oe_span12" style="text-align:center;">
+            <h2 class="oe_slogan" style="color:#7C3AED;font-size:32px;font-weight:800;letter-spacing:-0.5px;">
+                POS Sentinel
+            </h2>
+            <h3 class="oe_slogan" style="color:#555;font-size:16px;font-weight:400;margin-top:0;">
+                Real-time Behavioral Fraud Detection &amp; Immutable Audit Trail for Odoo POS
+            </h3>
+            <div style="margin:20px auto;max-width:560px;display:flex;flex-wrap:wrap;gap:8px;justify-content:center;">
+                <span style="background:#EFF6FF;color:#1D4ED8;border:1px solid #BFDBFE;border-radius:20px;padding:4px 14px;font-size:13px;font-weight:600;">⚡ Real-time Alerts</span>
+                <span style="background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;border-radius:20px;padding:4px 14px;font-size:13px;font-weight:600;">🔒 SHA-256 Audit Trail</span>
+                <span style="background:#F0FDF4;color:#166534;border:1px solid #BBF7D0;border-radius:20px;padding:4px 14px;font-size:13px;font-weight:600;">📊 Risk Scoring Engine</span>
+                <span style="background:#FDF4FF;color:#7E22CE;border:1px solid #E9D5FF;border-radius:20px;padding:4px 14px;font-size:13px;font-weight:600;">🏢 Multi-company</span>
+                <span style="background:#FFF1F2;color:#9F1239;border:1px solid #FECDD3;border-radius:20px;padding:4px 14px;font-size:13px;font-weight:600;">🚨 Critical Notifications</span>
+                <span style="background:#F0F9FF;color:#075985;border:1px solid #BAE6FD;border-radius:20px;padding:4px 14px;font-size:13px;font-weight:600;">📋 Compliance Dashboard</span>
+            </div>
         </div>
     </div>
 </section>
@@ -10,13 +22,18 @@
 <section class="oe_container oe_dark">
     <div class="oe_row oe_spaced">
         <div class="oe_span12">
-            <h3>Real-time fraud detection with immutable audit trail</h3>
-            <p>
-                POS Sentinel monitors every Point of Sale operation in real time,
-                detecting suspicious patterns like excessive voids, unauthorized
-                discounts, and anomalous cash movements. Every event is captured in
-                a <strong>SHA-256 signed, immutable audit log</strong> that cannot
-                be modified, deleted, or duplicated.
+            <h3 style="color:#7C3AED;">What is POS Sentinel?</h3>
+            <p style="font-size:15px;line-height:1.7;">
+                POS Sentinel is a <strong>fraud prevention module</strong> that silently monitors
+                every Point of Sale operation in real time. It detects suspicious behavioral patterns —
+                excessive voids, unauthorized price overrides, anomalous cash movements, unexpected refunds —
+                and scores each event using a <strong>configurable risk engine</strong>.
+            </p>
+            <p style="font-size:15px;line-height:1.7;">
+                Every captured event is stored in a <strong>SHA-256 signed, immutable audit log</strong>
+                with cryptographic integrity verification. The log cannot be modified, deleted, or
+                duplicated — even by an administrator. Perfect for compliance audits, internal controls,
+                and legal evidence.
             </p>
         </div>
     </div>
@@ -24,36 +41,53 @@
 
 <section class="oe_container">
     <div class="oe_row oe_spaced">
-        <div class="oe_span6">
-            <h3><i class="fa fa-shield"></i> Shadow Logger</h3>
-            <p>
-                Captures POS events silently without affecting cashier workflow.
-                No popups, no delays — just invisible monitoring.
-            </p>
-        </div>
-        <div class="oe_span6">
-            <h3><i class="fa fa-brain"></i> Scoring Engine</h3>
-            <p>
-                Behavioral scoring engine calculates risk levels based on
-                configurable rules and thresholds.
-            </p>
+        <div class="oe_span12">
+            <h3 style="text-align:center;color:#7C3AED;margin-bottom:24px;">🆕 New in v1.5 — Real-time Critical Alerts</h3>
         </div>
     </div>
     <div class="oe_row oe_spaced">
         <div class="oe_span6">
-            <h3><i class="fa fa-lock"></i> Immutable Audit Trail</h3>
-            <p>
-                Triple-layer immutability protection: ORM overrides, ACL rules,
-                and record-level security. SHA-256 integrity hashing with
-                cryptographically-secure dynamic salt.
-            </p>
+            <div style="background:#FFF5F5;border-left:4px solid #EF4444;padding:16px 20px;border-radius:4px;">
+                <h4 style="margin:0 0 8px;color:#DC2626;">📧 Email Alerts</h4>
+                <p style="margin:0;font-size:14px;color:#555;">
+                    Instant email notifications to one or more recipients when a
+                    high-risk or critical event is detected. Professional HTML template
+                    with full event detail and a direct link to the audit dashboard.
+                </p>
+            </div>
         </div>
         <div class="oe_span6">
-            <h3><i class="fa fa-bell"></i> Real-time Alerts</h3>
-            <p>
-                Automatic notifications when risk thresholds are exceeded.
-                Configurable alert channels and escalation rules.
-            </p>
+            <div style="background:#F5F3FF;border-left:4px solid #7C3AED;padding:16px 20px;border-radius:4px;">
+                <h4 style="margin:0 0 8px;color:#6D28D9;">🔗 Webhook Notifications</h4>
+                <p style="margin:0;font-size:14px;color:#555;">
+                    JSON POST to any URL. Native payloads for
+                    <strong>Slack</strong>, <strong>Telegram bots</strong>,
+                    <strong>Discord</strong>, and generic JSON for
+                    Twilio (WhatsApp/SMS) or custom integrations.
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="oe_row oe_spaced">
+        <div class="oe_span6">
+            <div style="background:#FFFBEB;border-left:4px solid #F59E0B;padding:16px 20px;border-radius:4px;">
+                <h4 style="margin:0 0 8px;color:#B45309;">⚙️ Configurable Threshold</h4>
+                <p style="margin:0;font-size:14px;color:#555;">
+                    Choose to be notified only for <strong>Critical</strong> events
+                    or for both <strong>High and Critical</strong> levels.
+                    Fine-tune per your operation's noise tolerance.
+                </p>
+            </div>
+        </div>
+        <div class="oe_span6">
+            <div style="background:#F0FDF4;border-left:4px solid #22C55E;padding:16px 20px;border-radius:4px;">
+                <h4 style="margin:0 0 8px;color:#15803D;">✅ One-click Test</h4>
+                <p style="margin:0;font-size:14px;color:#555;">
+                    Send a test alert directly from Settings to verify your
+                    email and webhook configuration before going live.
+                    No guesswork.
+                </p>
+            </div>
         </div>
     </div>
 </section>
@@ -61,17 +95,59 @@
 <section class="oe_container oe_dark">
     <div class="oe_row oe_spaced">
         <div class="oe_span12">
-            <h3>Monitored Events</h3>
-            <ul>
-                <li><strong>Line Voids</strong> — Tracks every removed line with original product and amount</li>
-                <li><strong>Price Overrides</strong> — Detects manual price changes vs. pricelist prices</li>
-                <li><strong>Discounts</strong> — Flags excessive discounts above configurable thresholds</li>
-                <li><strong>Refunds</strong> — Monitors refund patterns per cashier and session</li>
-                <li><strong>Cash Movements</strong> — Records all cash-in and cash-out operations</li>
-                <li><strong>Session Anomalies</strong> — Detects unusual open/close patterns</li>
-                <li><strong>Order Deletions</strong> — Captures deleted orders with full detail</li>
-                <li><strong>Quantity Changes</strong> — Tracks suspicious quantity modifications</li>
-            </ul>
+            <h3 style="color:#7C3AED;">Core Features</h3>
+        </div>
+    </div>
+    <div class="oe_row oe_spaced">
+        <div class="oe_span4">
+            <h4>🕵️ Shadow Logger</h4>
+            <p>
+                Captures POS events silently in the background. No popups,
+                no delays, zero impact on cashier workflow. Invisible to
+                the POS operator.
+            </p>
+        </div>
+        <div class="oe_span4">
+            <h4>🧠 Contextual Risk Algorithm</h4>
+            <p>
+                Assigns a 0–100 risk score to every event based on
+                configurable behavioral rules. Flags Low / Medium / High /
+                Critical levels automatically.
+            </p>
+        </div>
+        <div class="oe_span4">
+            <h4>🔒 Immutable Audit Trail</h4>
+            <p>
+                Triple-layer immutability: ORM overrides, ACL rules, and
+                record-level security. SHA-256 hash with dynamic salt
+                makes tampering detectable.
+            </p>
+        </div>
+    </div>
+    <div class="oe_row oe_spaced">
+        <div class="oe_span4">
+            <h4>📊 Compliance Dashboard</h4>
+            <p>
+                OWL 2 dashboard with real-time charts, risk distribution,
+                top offenders, event timeline, and drill-down analytics.
+                Exportable for auditors.
+            </p>
+        </div>
+        <div class="oe_span4">
+            <h4>🏢 Multi-company</h4>
+            <p>
+                Full multi-company support with company-scoped security
+                rules. Each branch sees only its own data.
+                Separation of duties enforced.
+            </p>
+        </div>
+        <div class="oe_span4">
+            <h4>🔍 Integrity Verification</h4>
+            <p>
+                Automated weekly cron re-computes every SHA-256 hash and
+                flags mismatches. Tampered records are identified
+                immediately.
+            </p>
         </div>
     </div>
 </section>
@@ -79,34 +155,55 @@
 <section class="oe_container">
     <div class="oe_row oe_spaced">
         <div class="oe_span12">
-            <h3>Security Architecture</h3>
-            <table class="table table-bordered">
-                <thead>
+            <h3 style="color:#7C3AED;">Monitored POS Events</h3>
+            <table class="table table-bordered" style="font-size:14px;">
+                <thead style="background:#7C3AED;color:#fff;">
                     <tr>
-                        <th>Layer</th>
-                        <th>Protection</th>
+                        <th>Event</th>
+                        <th>What is captured</th>
+                        <th>Typical risk</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td>ORM Override</td>
-                        <td>write(), unlink(), copy() blocked with UserError</td>
+                        <td><strong>Line Void</strong></td>
+                        <td>Product, original amount, cashier, timestamp</td>
+                        <td>Medium – High</td>
                     </tr>
                     <tr>
-                        <td>ACL (ir.model.access)</td>
-                        <td>perm_write=0, perm_unlink=0 for all groups</td>
+                        <td><strong>Price Override</strong></td>
+                        <td>Original price vs. manual price, delta %</td>
+                        <td>High</td>
                     </tr>
                     <tr>
-                        <td>Record Rules (ir.rule)</td>
-                        <td>perm_write=False, perm_unlink=False</td>
+                        <td><strong>Excessive Discount</strong></td>
+                        <td>Discount %, authorization, order total</td>
+                        <td>High – Critical</td>
                     </tr>
                     <tr>
-                        <td>Integrity Hash</td>
-                        <td>SHA-256 with dynamic salt — tamper-evident</td>
+                        <td><strong>Refund / Return</strong></td>
+                        <td>Refund amount, original order, cashier frequency</td>
+                        <td>Medium – Critical</td>
                     </tr>
                     <tr>
-                        <td>Automated Verification</td>
-                        <td>Weekly cron checks all hashes, flags mismatches</td>
+                        <td><strong>Cash Movement</strong></td>
+                        <td>Cash in / cash out, reason, session context</td>
+                        <td>Medium – High</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Session Anomaly</strong></td>
+                        <td>Unusual open/close timing, duration outliers</td>
+                        <td>Low – Medium</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Order Deletion</strong></td>
+                        <td>Full order detail before deletion</td>
+                        <td>High – Critical</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Quantity Change</strong></td>
+                        <td>Original vs. modified quantity, product, amount delta</td>
+                        <td>Medium – High</td>
                     </tr>
                 </tbody>
             </table>
@@ -116,15 +213,59 @@
 
 <section class="oe_container oe_dark">
     <div class="oe_row oe_spaced">
-        <div class="oe_span12 text-center">
-            <h3>Support</h3>
-            <p>
-                <i class="fa fa-envelope"></i>
+        <div class="oe_span12">
+            <h3 style="color:#7C3AED;">Security Architecture</h3>
+            <table class="table table-bordered" style="font-size:14px;">
+                <thead style="background:#7C3AED;color:#fff;">
+                    <tr>
+                        <th>Layer</th>
+                        <th>Mechanism</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>ORM Override</strong></td>
+                        <td><code>write()</code>, <code>unlink()</code>, <code>copy()</code> blocked at model level — raises UserError</td>
+                    </tr>
+                    <tr>
+                        <td><strong>ACL</strong></td>
+                        <td><code>perm_write=0</code>, <code>perm_unlink=0</code> for all groups including admin</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Record Rules</strong></td>
+                        <td>Domain-level <code>perm_write=False</code>, <code>perm_unlink=False</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Integrity Hash</strong></td>
+                        <td>SHA-256 with cryptographically-secure dynamic salt — tamper-evident</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Automated Verification</strong></td>
+                        <td>Weekly scheduled action re-checks all hashes and flags mismatches</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Separation of Duties</strong></td>
+                        <td>POS Auditor (read-only) vs. POS Security Manager (configure rules)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<section class="oe_container">
+    <div class="oe_row oe_spaced">
+        <div class="oe_span12" style="text-align:center;">
+            <h3 style="color:#7C3AED;">Support &amp; Contact</h3>
+            <p style="font-size:15px;">
+                <i class="fa fa-envelope"></i>&nbsp;
                 <a href="mailto:contacto@neurodev.cl">contacto@neurodev.cl</a>
+                &nbsp;&nbsp;·&nbsp;&nbsp;
+                <i class="fa fa-globe"></i>&nbsp;
+                <a href="https://neurodev.cl">neurodev.cl</a>
             </p>
-            <p>
-                <i class="fa fa-globe"></i>
-                <a href="https://neurodev.cl">https://neurodev.cl</a>
+            <p style="color:#888;font-size:13px;margin-top:16px;">
+                Built by <strong>NeuroDev</strong> — Odoo specialists in retail fraud prevention and compliance.
             </p>
         </div>
     </div>
