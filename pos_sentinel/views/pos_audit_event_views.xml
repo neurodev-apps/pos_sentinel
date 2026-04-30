@@ -112,9 +112,9 @@
                 <separator/>
                 <filter name="filter_today" string="Today"
                         domain="[('create_date', '>=', datetime.datetime.combine(context_today(), datetime.time(0,0,0)))]"/>
-                <filter name="filter_this_week" string="This Week"
-                        domain="[('create_date', '>=', (context_today() - datetime.timedelta(days=context_today().weekday())).strftime('%Y-%m-%d'))]"/>
-                <filter name="filter_this_month" string="This Month"
+                <filter name="filter_this_week" string="Esta Semana"
+                        domain="[('create_date', '>=', (context_today() - relativedelta(days=context_today().weekday())))]"/>
+                <filter name="filter_this_month" string="Este Mes"
                         domain="[('create_date', '>=', context_today().strftime('%Y-%m-01'))]"/>
                 <separator/>
                 <filter name="filter_critical" string="Critical"
