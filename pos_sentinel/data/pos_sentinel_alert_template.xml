@@ -14,7 +14,8 @@
         <field name="body_html" type="html">
 <div style="margin:0;padding:0;font-family:Arial,sans-serif;background:#f4f4f4;">
   <div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
-    <div t-attf-style="background:#{{ '#dc3545' if object.risk_level == 'critical' else '#fd7e14' }};color:#fff;padding:24px 32px;">
+    <t t-set="sentinel_hdr_color" t-value="'dc3545' if object.risk_level == 'critical' else 'fd7e14'"/>
+    <div t-attf-style="background:#{{ sentinel_hdr_color }};color:#fff;padding:24px 32px;">
       <div style="font-size:14px;letter-spacing:2px;opacity:0.9;">POS SENTINEL ALERT</div>
       <h1 style="margin:8px 0 0;font-size:24px;line-height:1.2;">
         <t t-if="object.risk_level == 'critical'">🚨 Critical Risk Detected</t>
