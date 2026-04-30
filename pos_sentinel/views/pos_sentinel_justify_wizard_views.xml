@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_pos_sentinel_justify_wizard_form" model="ir.ui.view">
+        <field name="name">pos.sentinel.justify.wizard.form</field>
+        <field name="model">pos.sentinel.justify.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Justify Audit Event">
+                <sheet>
+                    <div class="alert alert-warning" role="alert">
+                        <i class="fa fa-exclamation-triangle"/> Justifying an event does <strong>not</strong> alter its SHA-256 hash or remove it from the audit log. It only marks it as reviewed by you.
+                    </div>
+                    <group string="Event">
+                        <field name="event_label" readonly="1"/>
+                        <field name="risk_level" widget="badge"
+                               decoration-danger="risk_level in ('high','critical')"
+                               decoration-warning="risk_level == 'medium'"
+                               decoration-info="risk_level == 'low'"/>
+                        <field name="risk_score" readonly="1"/>
+                    </group>
+                    <group string="Justification">
+                        <field name="justification_note"
+                               placeholder="Explain why this event is not fraudulent (min. 10 characters)..."
+                               nolabel="1"
+                               colspan="2"/>
+                    </group>
+                </sheet>
+                <footer>
+                    <button string="Mark as Justified"
+                            name="action_justify"
+                            type="object"
+                            class="btn-primary"/>
+                    <button string="Cancel"
+                            class="btn-secondary"
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</odoo>

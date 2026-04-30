@@ -7,9 +7,9 @@
         <field name="model">pos.audit.event</field>
         <field name="arch" type="xml">
             <tree create="0" edit="0" delete="0" export_xlsx="1"
-                  decoration-danger="risk_level in ('high', 'critical')"
-                  decoration-warning="risk_level == 'medium'"
-                  decoration-muted="risk_level == 'none'">
+                  decoration-danger="risk_level in ('high', 'critical') and not is_justified"
+                  decoration-warning="risk_level == 'medium' and not is_justified"
+                  decoration-muted="risk_level == 'none' or is_justified">
                 <field name="create_date" string="Date"/>
                 <field name="event_type"/>
                 <field name="user_id"/>
@@ -28,6 +28,7 @@
                 <field name="is_tampered" optional="hide"
                        widget="boolean"
                        decoration-danger="is_tampered == True"/>
+                <field name="is_justified" optional="show" widget="boolean"/>
                 <field name="company_id" optional="hide"
                        groups="base.group_multi_company"/>
             </tree>
@@ -41,6 +42,20 @@
         <field name="arch" type="xml">
             <form create="0" edit="0" delete="0">
                 <sheet>
+                    <header>
+                        <button name="action_open_justify_wizard"
+                                string="Mark as Justified"
+                                type="object"
+                                class="btn-success"
+                                groups="pos_sentinel.group_pos_security_manager"
+                                attrs="{'invisible': [('is_justified', '=', True)]}"/>
+                        <div class="alert alert-success mb-0 py-1 px-3"
+                             attrs="{'invisible': [('is_justified', '=', False)]}">
+                            <i class="fa fa-check-circle"/> Justified by
+                            <field name="justified_by_id" readonly="1" nolabel="1" class="d-inline"/>
+                            on <field name="justified_date" readonly="1" nolabel="1" class="d-inline"/>
+                        </div>
+                    </header>
                     <div class="oe_button_box" name="button_box">
                         <button name="%(point_of_sale.action_pos_pos_form)d"
                                 type="action"
@@ -91,6 +106,14 @@
                         <page string="Event Details" name="details">
                             <field name="details" widget="ace" options="{'mode': 'json'}"/>
                         </page>
+                        <page string="Justification" name="justification"
+                              attrs="{'invisible': [('is_justified', '=', False)]}">
+                            <group>
+                                <field name="justified_by_id" readonly="1"/>
+                                <field name="justified_date" readonly="1"/>
+                            </group>
+                            <field name="justification_note" readonly="1"/>
+                        </page>
                     </notebook>
                 </sheet>
             </form>
@@ -128,6 +151,10 @@
                 <separator/>
                 <filter name="filter_tampered" string="Tampered"
                         domain="[('is_tampered', '=', True)]"/>
+                <filter name="filter_justified" string="Justified"
+                        domain="[('is_justified', '=', True)]"/>
+                <filter name="filter_pending_review" string="Pending Review"
+                        domain="[('is_justified', '=', False), ('risk_level', 'in', ('high', 'critical'))]"/>
                 <separator/>
                 <filter name="filter_voids" string="Voids"
                         domain="[('event_type', '=', 'void_line')]"/>
