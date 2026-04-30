@@ -6,7 +6,7 @@
     <record id="email_template_pos_sentinel_alert" model="mail.template">
         <field name="name">POS Sentinel — Critical Alert</field>
         <field name="model_id" ref="model_pos_audit_event"/>
-        <field name="subject">🚨 POS Sentinel: {{ object.risk_level|upper }} — {{ object.event_type }}</field>
+        <field name="subject">🚨 POS Sentinel: {{ object.risk_level.upper() }} — {{ object.event_type }}</field>
         <field name="email_from">{{ (user.email_formatted or user.company_id.email_formatted or '') }}</field>
         <field name="email_to">{{ ctx.get('alert_email_to', '') }}</field>
         <field name="lang">{{ object.user_id.lang or user.lang }}</field>
