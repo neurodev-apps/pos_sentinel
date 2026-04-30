@@ -151,6 +151,32 @@ class PosAuditEvent(models.Model):
         help='Set to True by the integrity verification cron if the hash does not match.',
     )
 
+    # ── Forgiveness ──────────────────────────────────────────────
+    is_justified = fields.Boolean(
+        string='Justified',
+        default=False,
+        copy=False,
+        index=True,
+        help='Marked as justified by a Security Manager. Does not alter the hash.',
+    )
+    justification_note = fields.Text(
+        string='Justification Note',
+        copy=False,
+        readonly=True,
+    )
+    justified_by_id = fields.Many2one(
+        'res.users',
+        string='Justified By',
+        copy=False,
+        readonly=True,
+        ondelete='restrict',
+    )
+    justified_date = fields.Datetime(
+        string='Justified On',
+        copy=False,
+        readonly=True,
+    )
+
     # ── Multi-company ────────────────────────────────────────────
     company_id = fields.Many2one(
         'res.company',
@@ -205,7 +231,13 @@ class PosAuditEvent(models.Model):
         token = ctx.get('_sentinel_write_token')
         if token == _SENTINEL_WRITE_TOKEN:
             allowed_keys = set(vals.keys())
-            if allowed_keys == {'hash'} or allowed_keys == {'is_tampered'}:
+            _JUSTIFICATION_FIELDS = {
+                'is_justified', 'justification_note',
+                'justified_by_id', 'justified_date',
+            }
+            if (allowed_keys == {'hash'}
+                    or allowed_keys == {'is_tampered'}
+                    or allowed_keys <= _JUSTIFICATION_FIELDS):
                 return super().write(vals)
         raise UserError(_(
             'POS audit events cannot be modified. '
@@ -226,6 +258,29 @@ class PosAuditEvent(models.Model):
             create_date=self.create_date,
             details=self.details or '',
         )
+
+    # ── Forgiveness ──────────────────────────────────────────────
+
+    def _justify(self, note):
+        """Mark this event as justified without altering the integrity hash."""
+        self.ensure_one()
+        self.with_context(_sentinel_write_token=_SENTINEL_WRITE_TOKEN).write({
+            'is_justified': True,
+            'justification_note': note,
+            'justified_by_id': self.env.user.id,
+            'justified_date': fields.Datetime.now(),
+        })
+
+    def action_open_justify_wizard(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Justify Event',
+            'res_model': 'pos.sentinel.justify.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {'default_event_id': self.id},
+        }
 
     # ── Internal write helpers ───────────────────────────────────
 
