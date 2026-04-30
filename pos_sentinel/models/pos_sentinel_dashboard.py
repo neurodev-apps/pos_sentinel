@@ -20,14 +20,6 @@ class PosSentinelDashboard(models.AbstractModel):
         Uses raw SQL for performance on large datasets.
         All queries are company-scoped to prevent multi-company data leaks.
         Requires POS Auditor or Security Manager group.
-
-        Args:
-            date_from: ISO date string (default: 30 days ago)
-            date_to: ISO date string (default: now)
-
-        Returns:
-            dict with keys: summary, by_type, by_risk, by_day, by_user,
-                           top_products, integrity, recent_critical
         """
         if not self.env.user.has_group('pos_sentinel.group_pos_auditor'):
             raise AccessError(
@@ -42,9 +34,7 @@ class PosSentinelDashboard(models.AbstractModel):
             if not value:
                 return fallback
             if isinstance(value, str):
-                # Strip trailing Z and replace T with space for ISO 8601
                 v = value.replace('T', ' ').rstrip('Z')
-                # Cut milliseconds if present: '2026-04-30 05:18:50.641' -> '2026-04-30 05:18:50'
                 if '.' in v:
                     v = v.split('.', 1)[0]
                 try:
@@ -56,17 +46,26 @@ class PosSentinelDashboard(models.AbstractModel):
         dt_from = _parse_dt(date_from, now - timedelta(days=30))
         dt_to = _parse_dt(date_to, now)
 
+        # Previous period of the same duration for delta comparisons
+        dt_duration = dt_to - dt_from
+        dt_prev_from = dt_from - dt_duration
+        dt_prev_to = dt_from
+
         company_ids = self.env.companies.ids
         if not company_ids:
             return {
-                'summary': {}, 'by_type': [], 'by_risk': [],
+                'summary': {}, 'prev_summary': {}, 'by_type': [], 'by_risk': [],
                 'by_day': [], 'by_user': [], 'top_products': [],
                 'integrity': self._get_integrity_status(),
                 'recent_critical': [],
+                'heatmap': [], 'heatmap_users': [], 'heatmap_max': 1.0,
             }
+
+        heatmap_data = self._get_heatmap_data(dt_from, dt_to, company_ids)
 
         return {
             'summary': self._get_summary(dt_from, dt_to, company_ids),
+            'prev_summary': self._get_summary(dt_prev_from, dt_prev_to, company_ids),
             'by_type': self._get_events_by_type(dt_from, dt_to, company_ids),
             'by_risk': self._get_events_by_risk(dt_from, dt_to, company_ids),
             'by_day': self._get_events_by_day(dt_from, dt_to, company_ids),
@@ -74,10 +73,13 @@ class PosSentinelDashboard(models.AbstractModel):
             'top_products': self._get_top_products(dt_from, dt_to, company_ids),
             'integrity': self._get_integrity_status(),
             'recent_critical': self._get_recent_critical(dt_from, dt_to, company_ids),
+            'heatmap': heatmap_data['rows'],
+            'heatmap_users': heatmap_data['users'],
+            'heatmap_max': heatmap_data['max'],
         }
 
     def _get_summary(self, dt_from, dt_to, company_ids):
-        """Summary cards: total events, by risk level, tampered count."""
+        """Summary cards: total events, by risk level, avg score."""
         self.env.cr.execute("""
             SELECT
                 COUNT(*) AS total,
@@ -224,3 +226,35 @@ class PosSentinelDashboard(models.AbstractModel):
             if row.get('create_date'):
                 row['create_date'] = fields.Datetime.to_string(row['create_date'])
         return rows
+
+    def _get_heatmap_data(self, dt_from, dt_to, company_ids):
+        """Risk heatmap: top 8 cashiers × 24 hours."""
+        self.env.cr.execute("""
+            SELECT
+                COALESCE(rp.name, ru.login) AS user_name,
+                EXTRACT(HOUR FROM pae.create_date)::int AS hour,
+                COUNT(*) AS event_count,
+                COALESCE(SUM(pae.risk_score), 0) AS risk_sum
+            FROM pos_audit_event pae
+            JOIN res_users ru ON pae.user_id = ru.id
+            LEFT JOIN res_partner rp ON ru.partner_id = rp.id
+            WHERE pae.create_date BETWEEN %s AND %s
+              AND pae.company_id IN %s
+            GROUP BY ru.id, rp.name, ru.login, EXTRACT(HOUR FROM pae.create_date)::int
+            ORDER BY user_name, hour
+        """, (dt_from, dt_to, tuple(company_ids)))
+        rows = self.env.cr.dictfetchall()
+        for row in rows:
+            row['risk_sum'] = float(row['risk_sum'])
+            row['hour'] = int(row['hour'])
+        user_totals = {}
+        for row in rows:
+            user_totals[row['user_name']] = user_totals.get(row['user_name'], 0) + row['risk_sum']
+        top_users = sorted(user_totals.keys(), key=lambda u: user_totals[u], reverse=True)[:8]
+        filtered = [r for r in rows if r['user_name'] in top_users]
+        heatmap_max = max((r['risk_sum'] for r in filtered), default=1)
+        return {
+            'rows': filtered,
+            'users': top_users,
+            'max': float(heatmap_max),
+        }

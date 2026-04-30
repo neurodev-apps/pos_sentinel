@@ -1,32 +1,161 @@
+/* ── Base ───────────────────────────────────────────────────── */
 .o_pos_sentinel_dashboard {
-    background-color: #f8f9fa;
+    background-color: #f4f6fb;
     min-height: 100%;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
 }
 
+/* ── Header ─────────────────────────────────────────────────── */
 .o_sentinel_header {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+    color: #fff;
     position: sticky;
     top: 0;
     z-index: 10;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+}
+.o_sentinel_header h2 { color: #fff !important; }
+.o_sentinel_header .badge { background: rgba(255,255,255,0.15) !important; color: #fff; }
+.o_sentinel_header .form-select,
+.o_sentinel_header .btn {
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.2);
+    color: #fff;
+}
+.o_sentinel_header .btn:hover {
+    background: rgba(255,255,255,0.2);
+    color: #fff;
 }
 
+/* ── KPI Cards ──────────────────────────────────────────────── */
+.o_sentinel_kpi_card {
+    border: none !important;
+    border-top: 3px solid #7C3AED !important;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.07) !important;
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+.o_sentinel_kpi_card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.12) !important;
+}
+.o_sentinel_kpi_card .o_kpi_value {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1.1;
+}
+.o_sentinel_kpi_card .o_kpi_delta {
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+/* ── Charts ─────────────────────────────────────────────────── */
 .o_pos_sentinel_dashboard .card {
-    transition: box-shadow 0.2s ease;
+    border: none;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.07);
+    transition: box-shadow 0.2s;
 }
-
 .o_pos_sentinel_dashboard .card:hover {
-    box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.1) !important;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.12) !important;
+}
+.o_pos_sentinel_dashboard .card-header {
+    background: #fff;
+    border-bottom: 1px solid #f0f0f0;
+    font-weight: 600;
 }
 
-.o_pos_sentinel_dashboard .card-title {
-    font-weight: 700;
+/* ── Heat Map ───────────────────────────────────────────────── */
+.o_sentinel_heatmap_wrap {
+    overflow-x: auto;
+}
+.o_sentinel_heatmap_table {
+    border-collapse: collapse;
+    min-width: 100%;
+    font-size: 11px;
+}
+.o_sentinel_heatmap_table th,
+.o_sentinel_heatmap_table td {
+    padding: 0;
+    text-align: center;
+    white-space: nowrap;
+}
+.o_sentinel_heatmap_table th.user-col,
+.o_sentinel_heatmap_table td.user-col {
+    padding: 4px 10px 4px 4px;
+    text-align: left;
+    font-weight: 600;
+    min-width: 100px;
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #374151;
+}
+.o_sentinel_heatmap_table thead th {
+    color: #6b7280;
+    font-weight: 500;
+    padding-bottom: 4px;
+    font-size: 10px;
+}
+.o_sentinel_heatmap_cell {
+    width: 28px;
+    height: 28px;
+    border-radius: 3px;
+    cursor: default;
+    transition: opacity 0.1s;
+}
+.o_sentinel_heatmap_cell:hover { opacity: 0.8; }
+.o_sentinel_heatmap_legend {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: #6b7280;
+    margin-top: 8px;
+}
+.o_sentinel_heatmap_legend_bar {
+    width: 120px;
+    height: 10px;
+    border-radius: 5px;
+    background: linear-gradient(to right, #f0f4f8, #FFC107, #FD7E14, #DC3545);
 }
 
+/* ── Live feed ──────────────────────────────────────────────── */
+.o_sentinel_live_dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #DC3545;
+    margin-right: 4px;
+    animation: sentinel_pulse 1.5s infinite;
+}
+@keyframes sentinel_pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.35; transform: scale(0.7); }
+}
+
+/* ── Tables ─────────────────────────────────────────────────── */
 .o_pos_sentinel_dashboard .table-sm td,
 .o_pos_sentinel_dashboard .table-sm th {
     padding: 0.4rem 0.6rem;
-    font-size: 0.875rem;
+    font-size: 0.85rem;
+}
+.o_pos_sentinel_dashboard .badge { font-size: 0.72rem; }
+
+/* ── Export button ──────────────────────────────────────────── */
+.o_sentinel_btn_export {
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.2);
+    color: #fff;
+    font-size: 12px;
+}
+.o_sentinel_btn_export:hover {
+    background: rgba(255,255,255,0.2);
+    color: #fff;
 }
 
-.o_pos_sentinel_dashboard .badge {
-    font-size: 0.75rem;
+/* ── Bottom padding fix ─────────────────────────────────────── */
+.o_pos_sentinel_dashboard > div:last-of-type {
+    padding-bottom: 40px !important;
 }
