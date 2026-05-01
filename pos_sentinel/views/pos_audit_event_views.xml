@@ -29,6 +29,8 @@
                        widget="boolean"
                        decoration-danger="is_tampered == True"/>
                 <field name="is_justified" optional="show" widget="boolean"/>
+                <field name="is_after_hours" optional="hide" widget="boolean"
+                       decoration-warning="is_after_hours == True"/>
                 <field name="company_id" optional="hide"
                        groups="base.group_multi_company"/>
             </list>
@@ -100,6 +102,8 @@
                             <field name="hash"/>
                             <field name="is_tampered" widget="boolean"
                                    decoration-danger="is_tampered == True"/>
+                            <field name="is_after_hours" widget="boolean"
+                                   decoration-warning="is_after_hours == True"/>
                             <field name="company_id" groups="base.group_multi_company"/>
                         </group>
                     </group>
@@ -166,6 +170,8 @@
                         domain="[('is_tampered', '=', True)]"/>
                 <filter name="filter_justified" string="Justified"
                         domain="[('is_justified', '=', True)]"/>
+                <filter name="filter_after_hours" string="After Hours"
+                        domain="[('is_after_hours', '=', True)]"/>
                 <filter name="filter_pending_review" string="Pending Review"
                         domain="[('is_justified', '=', False), ('risk_level', 'in', ('high', 'critical'))]"/>
                 <separator/>
