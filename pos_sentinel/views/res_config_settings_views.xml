@@ -70,6 +70,39 @@
                         <field name="pos_sentinel_margin_skip_zero_cost"/>
                     </setting>
                 </block>
+                <block title="POS Sentinel &#8212; After-Hours Activity Detection"
+                       name="pos_sentinel_after_hours"
+                       help="Flag and score-boost POS operations outside business hours.">
+                    <setting id="pos_sentinel_after_hours_enabled"
+                             string="Detect after-hours activity"
+                             help="Each event is checked against your business hours. Events outside the window get a configurable score boost and an after-hours flag.">
+                        <field name="pos_sentinel_after_hours_enabled"/>
+                    </setting>
+                    <setting id="pos_sentinel_business_hours_start"
+                             string="Business Hours Start"
+                             help="Start of business hours in 24h format (e.g. 8.0 = 08:00)."
+                             invisible="not pos_sentinel_after_hours_enabled">
+                        <field name="pos_sentinel_business_hours_start"/>
+                    </setting>
+                    <setting id="pos_sentinel_business_hours_end"
+                             string="Business Hours End"
+                             help="End of business hours in 24h format (e.g. 22.0 = 22:00)."
+                             invisible="not pos_sentinel_after_hours_enabled">
+                        <field name="pos_sentinel_business_hours_end"/>
+                    </setting>
+                    <setting id="pos_sentinel_weekend_is_after_hours"
+                             string="Weekends are after-hours"
+                             help="When enabled, all events on Saturday and Sunday are flagged."
+                             invisible="not pos_sentinel_after_hours_enabled">
+                        <field name="pos_sentinel_weekend_is_after_hours"/>
+                    </setting>
+                    <setting id="pos_sentinel_after_hours_boost"
+                             string="Score boost (points)"
+                             help="Points added to risk score when event is after-hours."
+                             invisible="not pos_sentinel_after_hours_enabled">
+                        <field name="pos_sentinel_after_hours_boost"/>
+                    </setting>
+                </block>
             </xpath>
         </field>
     </record>

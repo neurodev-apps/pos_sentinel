@@ -185,6 +185,16 @@ class PosAuditEvent(models.Model):
         help='Set to True by the integrity verification cron if the hash does not match.',
     )
 
+    # ── After-hours flag ─────────────────────────────────────────
+    is_after_hours = fields.Boolean(
+        string='After Hours',
+        default=False,
+        readonly=True,
+        index=True,
+        help='True if the event occurred outside the configured business hours '
+             '(or on a weekend, when weekend-as-after-hours is enabled).',
+    )
+
     # ── Forgiveness ──────────────────────────────────────────────
     is_justified = fields.Boolean(
         string='Justified',
@@ -416,6 +426,20 @@ class PosAuditEvent(models.Model):
             create_vals['margin_pct'] = vals.get('margin_pct', 0.0)
         if 'quantity' in vals:
             create_vals['quantity'] = vals.get('quantity', 0.0)
+
+        # ── After-hours detection (global) ─────────────────────
+        try:
+            after_hours_info = self.env['pos.scoring.engine']._evaluate_after_hours_global()
+            if after_hours_info['is_after_hours']:
+                create_vals['is_after_hours'] = True
+                # Boost the risk score and re-map the level
+                boost = after_hours_info['boost']
+                if boost > 0 and create_vals.get('risk_score', 0) > 0:
+                    new_score = min(create_vals['risk_score'] + boost, 100.0)
+                    create_vals['risk_score'] = round(new_score, 2)
+                    create_vals['risk_level'] = self.env['pos.scoring.engine']._score_to_level(new_score)
+        except Exception as e:
+            _logger.warning("POS Sentinel: after-hours evaluation failed: %s", e)
 
         # ── Compute risk score via Neuro-Scoring Engine ──────────
         try:
