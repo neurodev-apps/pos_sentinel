@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
+    <!-- Wizard form -->
     <record id="view_pos_sentinel_justify_wizard_form" model="ir.ui.view">
         <field name="name">pos.sentinel.justify.wizard.form</field>
         <field name="model">pos.sentinel.justify.wizard</field>
@@ -8,19 +9,44 @@
             <form string="Justify Audit Event">
                 <sheet>
                     <div class="alert alert-warning" role="alert">
-                        <i class="fa fa-exclamation-triangle"/> Justifying an event does <strong>not</strong> alter its SHA-256 hash or remove it from the audit log. It only marks it as reviewed by you.
+                        <i class="fa fa-exclamation-triangle"/> Justifying events does <strong>not</strong> alter their SHA-256 hash or remove them from the audit log. It only marks them as reviewed by you. The same note is applied to every selected event.
                     </div>
-                    <group string="Event">
-                        <field name="event_label" readonly="1"/>
-                        <field name="risk_level" widget="badge"
-                               decoration-danger="risk_level in ('high','critical')"
-                               decoration-warning="risk_level == 'medium'"
-                               decoration-info="risk_level == 'low'"/>
-                        <field name="risk_score" readonly="1"/>
+
+                    <!-- Skipped warning -->
+                    <div class="alert alert-info" role="alert"
+                         attrs="{'invisible': [('skipped_count', '=', 0)]}">
+                        <i class="fa fa-info-circle"/>
+                        <field name="skipped_count" class="d-inline" nolabel="1"/>
+                        event(s) were already justified and will be skipped.
+                    </div>
+
+                    <group string="Selection">
+                        <field name="is_bulk" invisible="1"/>
+                        <field name="event_count"/>
+                        <field name="summary_label" attrs="{'invisible': [('is_bulk', '=', True)]}"/>
+                        <field name="risk_breakdown"/>
                     </group>
+
+                    <!-- Event list (visible only in bulk) -->
+                    <group attrs="{'invisible': [('is_bulk', '=', False)]}">
+                        <field name="event_ids" nolabel="1" colspan="2">
+                            <tree create="0" edit="0" delete="0">
+                                <field name="create_date" string="Date"/>
+                                <field name="event_type"/>
+                                <field name="user_id"/>
+                                <field name="risk_level" widget="badge"
+                                       decoration-danger="risk_level in ('high','critical')"
+                                       decoration-warning="risk_level == 'medium'"
+                                       decoration-info="risk_level == 'low'"/>
+                                <field name="risk_score"/>
+                                <field name="amount"/>
+                            </tree>
+                        </field>
+                    </group>
+
                     <group string="Justification">
                         <field name="justification_note"
-                               placeholder="Explain why this event is not fraudulent (min. 10 characters)..."
+                               placeholder="Explain why these events are not fraudulent (min. 10 characters)..."
                                nolabel="1"
                                colspan="2"/>
                     </group>
@@ -36,6 +62,17 @@
                 </footer>
             </form>
         </field>
+    </record>
+
+    <!-- Server action: Bulk Justify (appears in list selection menu) -->
+    <record id="action_pos_audit_event_bulk_justify" model="ir.actions.act_window">
+        <field name="name">Bulk Justify</field>
+        <field name="res_model">pos.sentinel.justify.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="binding_model_id" ref="model_pos_audit_event"/>
+        <field name="binding_view_types">list</field>
+        <field name="groups_id" eval="[(4, ref('pos_sentinel.group_pos_security_manager'))]"/>
     </record>
 
 </odoo>
