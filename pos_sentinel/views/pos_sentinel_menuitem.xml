@@ -42,11 +42,23 @@
               action="action_pos_scoring_rule"
               sequence="10"/>
 
-    <!-- Reports -->
-    <menuitem id="menu_pos_sentinel_report"
-              name="Generate Report"
+    <!-- Reports submenu -->
+    <menuitem id="menu_pos_sentinel_reports"
+              name="Reports"
               parent="menu_pos_sentinel_root"
+              sequence="20"
+              groups="pos_sentinel.group_pos_auditor"/>
+
+    <menuitem id="menu_pos_sentinel_report"
+              name="Audit Report"
+              parent="menu_pos_sentinel_reports"
               action="action_pos_sentinel_report_wizard"
+              sequence="10"/>
+
+    <menuitem id="menu_pos_sentinel_shift_report"
+              name="Shift Report"
+              parent="menu_pos_sentinel_reports"
+              action="action_pos_sentinel_shift_report_wizard"
               sequence="20"/>
 
 </odoo>
