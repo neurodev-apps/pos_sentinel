@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'POS Sentinel - Behavioral Fraud Detection',
-    'version': '19.0.1.8.0',
+    'version': '19.0.1.9.0',
     'category': 'Point of Sale',
-    'summary': 'Real-time behavioral fraud detection and immutable audit trail for Odoo POS',
+    'summary': 'Real-time behavioral fraud detection, margin anomaly alerts and immutable audit trail for Odoo POS',
     'description': """
 POS Sentinel — Behavioral Fraud Detection for Odoo POS
 =======================================================
@@ -16,9 +16,13 @@ Key Features
 ------------
 * **Shadow Logger**: Captures POS events in real time without affecting cashier workflow.
 * **Neuro-Scoring Engine**: Calculates risk scores based on configurable behavioral rules.
+* **Margin Anomaly Detection**: Flags POS sales below cost (Critical) or below configurable margin threshold (Medium) — catches collusion and pricing errors instantly.
 * **Immutable Audit Trail**: SHA-256 integrity hashing with dynamic salt — tamper-evident.
-* **Real-time Alerts**: Automatic notifications when risk thresholds are exceeded.
+* **Real-time Alerts**: Automatic email + webhook (Slack / Telegram / Discord / Twilio) notifications when risk thresholds are exceeded.
 * **Compliance Dashboard**: OWL 2 dashboard with charts and drill-down analytics.
+* **Bulk Justify (Forgiveness)**: Multi-event justification with single note — review high-risk events efficiently.
+* **Shift Report**: Per-session security report grouped by cashier (PDF + XLSX).
+* **Audit Report**: Custom-period compliance report with risk filtering (PDF + XLSX).
 * **Multi-company**: Full multi-company support with company-scoped security rules.
 
 Monitored Events
@@ -29,6 +33,8 @@ Monitored Events
 * Cash movements (in/out)
 * Session open/close anomalies
 * Order deletions and sequence gaps
+* **Negative-margin sales (sale below cost)**
+* **Low-margin sales (below configured threshold)**
 
 Security
 --------

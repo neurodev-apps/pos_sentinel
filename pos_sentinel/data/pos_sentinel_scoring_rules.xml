@@ -166,5 +166,28 @@
         <field name="sequence">120</field>
     </record>
 
+    <!-- ── Margin Anomaly Detection ──────────────────────────── -->
+    <record id="rule_negative_margin" model="pos.scoring.rule">
+        <field name="name">Negative Margin Sale</field>
+        <field name="event_type">negative_margin</field>
+        <field name="base_score">90</field>
+        <field name="sequence">130</field>
+        <field name="amount_threshold">10000</field>
+        <field name="amount_multiplier">1.5</field>
+        <field name="frequency_window_minutes">120</field>
+        <field name="frequency_threshold">2</field>
+        <field name="frequency_multiplier">2.0</field>
+    </record>
+
+    <record id="rule_low_margin" model="pos.scoring.rule">
+        <field name="name">Low Margin Sale</field>
+        <field name="event_type">low_margin</field>
+        <field name="base_score">35</field>
+        <field name="sequence">140</field>
+        <field name="frequency_window_minutes">60</field>
+        <field name="frequency_threshold">5</field>
+        <field name="frequency_multiplier">1.8</field>
+    </record>
+
 </data>
 </odoo>

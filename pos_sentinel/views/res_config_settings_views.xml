@@ -49,6 +49,27 @@
                                 icon="fa-paper-plane"/>
                     </setting>
                 </block>
+                <block title="POS Sentinel — Margin Anomaly Detection"
+                       name="pos_sentinel_margin"
+                       help="Flag POS sales below cost or with abnormally low margin.">
+                    <setting id="pos_sentinel_margin_evaluate_enabled"
+                             string="Enable margin anomaly detection"
+                             help="Each POS order line is evaluated. Sales below cost are flagged Critical. Sales below the threshold below are flagged Medium.">
+                        <field name="pos_sentinel_margin_evaluate_enabled"/>
+                    </setting>
+                    <setting id="pos_sentinel_margin_threshold_pct"
+                             string="Low-Margin Threshold (%)"
+                             help="Margin percentage below which a Low Margin event is generated."
+                             invisible="not pos_sentinel_margin_evaluate_enabled">
+                        <field name="pos_sentinel_margin_threshold_pct"/>
+                    </setting>
+                    <setting id="pos_sentinel_margin_skip_zero_cost"
+                             string="Skip products without cost"
+                             help="Exclude products whose standard_price is 0 from evaluation."
+                             invisible="not pos_sentinel_margin_evaluate_enabled">
+                        <field name="pos_sentinel_margin_skip_zero_cost"/>
+                    </setting>
+                </block>
             </xpath>
         </field>
     </record>

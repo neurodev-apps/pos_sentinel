@@ -34,6 +34,8 @@ EVENT_TYPES = [
     ('negative_qty', 'Negative Quantity'),
     ('post_payment_edit', 'Post-Payment Edit'),
     ('sequence_gap', 'Sequence Gap Detected'),
+    ('negative_margin', 'Negative Margin'),
+    ('low_margin', 'Low Margin'),
     ('other', 'Other'),
 ]
 
@@ -133,6 +135,38 @@ class PosAuditEvent(models.Model):
         string='Product',
         readonly=True,
         ondelete='set null',
+    )
+
+    # ── Margin metrics (populated for negative_margin / low_margin) ──
+    cost_at_sale = fields.Monetary(
+        string='Cost at Sale',
+        currency_field='currency_id',
+        readonly=True,
+        help='Standard cost of the product at the moment of the sale.',
+    )
+    selling_price = fields.Monetary(
+        string='Selling Price (net)',
+        currency_field='currency_id',
+        readonly=True,
+        help='Effective unit price after discount, before tax.',
+    )
+    margin_amount = fields.Monetary(
+        string='Margin Amount',
+        currency_field='currency_id',
+        readonly=True,
+        help='Total margin in money for this line (selling - cost) * qty.',
+    )
+    margin_pct = fields.Float(
+        string='Margin %',
+        digits=(6, 2),
+        readonly=True,
+        help='Percentage margin relative to the selling price.',
+    )
+    quantity = fields.Float(
+        string='Quantity',
+        digits=(12, 3),
+        readonly=True,
+        help='Quantity sold for this line (used for margin events).',
     )
 
     # ── Integrity ────────────────────────────────────────────────
@@ -370,6 +404,18 @@ class PosAuditEvent(models.Model):
             'details': details_json,
             'company_id': self.env.company.id,
         }
+
+        # Margin metrics — populated for negative_margin / low_margin events
+        if 'cost_at_sale' in vals:
+            create_vals['cost_at_sale'] = vals.get('cost_at_sale', 0.0)
+        if 'selling_price' in vals:
+            create_vals['selling_price'] = vals.get('selling_price', 0.0)
+        if 'margin_amount' in vals:
+            create_vals['margin_amount'] = vals.get('margin_amount', 0.0)
+        if 'margin_pct' in vals:
+            create_vals['margin_pct'] = vals.get('margin_pct', 0.0)
+        if 'quantity' in vals:
+            create_vals['quantity'] = vals.get('quantity', 0.0)
 
         # ── Compute risk score via Neuro-Scoring Engine ──────────
         try:
