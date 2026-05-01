@@ -41,6 +41,7 @@
         <field name="model">pos.audit.event</field>
         <field name="arch" type="xml">
             <form create="0" edit="0" delete="0">
+                <field name="is_justified" invisible="1"/>
                 <sheet>
                     <header>
                         <button name="action_open_justify_wizard"
