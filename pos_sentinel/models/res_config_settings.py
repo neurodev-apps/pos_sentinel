@@ -45,6 +45,31 @@ class ResConfigSettings(models.TransientModel):
         default='generic',
     )
 
+    # ── POS Sentinel — Negative / Low Margin Detection ──────────
+    pos_sentinel_margin_evaluate_enabled = fields.Boolean(
+        string='Detect Margin Anomalies',
+        config_parameter='pos_sentinel.margin_evaluate_enabled',
+        default=True,
+        help='When enabled, every POS order line is evaluated. Sales below '
+             'cost generate a Critical "Negative Margin" event; sales below '
+             'the configured margin threshold generate a Medium "Low Margin" event.',
+    )
+    pos_sentinel_margin_threshold_pct = fields.Float(
+        string='Low-Margin Threshold (%)',
+        config_parameter='pos_sentinel.margin_threshold_pct',
+        default=5.0,
+        help='Margin percentage below which a "Low Margin" event is created. '
+             'Sales below cost (negative margin) are always flagged regardless of this value.',
+    )
+    pos_sentinel_margin_skip_zero_cost = fields.Boolean(
+        string='Skip Products Without Cost',
+        config_parameter='pos_sentinel.margin_skip_zero_cost',
+        default=True,
+        help='When enabled, products with standard_price = 0 are excluded '
+             'from margin evaluation (avoids false positives on services or '
+             'unconfigured products).',
+    )
+
     def action_pos_sentinel_test_alert(self):
         """Send a test alert with sample data to verify the configuration."""
         self.ensure_one()
