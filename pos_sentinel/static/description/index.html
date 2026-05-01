@@ -1,7 +1,7 @@
 <section style="font-family: 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #2c2c2c;">
 
   <h1 style="color: #312E81; font-size: 2.2em; margin: 0 0 12px 0;">
-    POS Sentinel — Behavioral Fraud Detection
+    POS Sentinel &mdash; Behavioral Fraud Detection
   </h1>
   <p style="font-size: 1.15em; color: #444; margin: 0 0 30px 0;">
     Real-time behavioral fraud detection, margin anomaly alerts and immutable
@@ -13,16 +13,16 @@
 
   <h2 style="color: #312E81; margin-top: 30px;">Why POS Sentinel?</h2>
   <p>
-    POS fraud is invisible — until it isn't. Cashiers void lines after payment,
+    POS fraud is invisible &mdash; until it isn&apos;t. Cashiers void lines after payment,
     apply unauthorised discounts, ring up sales below cost to reward an accomplice.
     The data is in your database, but nobody is watching it. POS Sentinel does.
   </p>
   <ul>
-    <li><b>Detects 18 distinct event types</b> — voids, discounts, refunds, price overrides, cash movements, negative margin sales, low margin sales, and more.</li>
-    <li><b>Configurable scoring rules</b> — every event gets a risk score based on amount, frequency, after-hours timing.</li>
-    <li><b>Immutable audit log</b> — SHA-256 chained events, tamper-evident. Cannot be modified, deleted, or duplicated.</li>
-    <li><b>Real-time alerts</b> — email, Slack, Telegram, Discord, Twilio (WhatsApp/SMS) the moment a Critical event lands.</li>
-    <li><b>Compliance-ready</b> — PDF + XLSX reports for auditors, with risk filter, period filter, per-cashier breakdown.</li>
+    <li><b>Detects 18 distinct event types</b> &mdash; voids, discounts, refunds, price overrides, cash movements, negative margin sales, low margin sales, and more.</li>
+    <li><b>Configurable scoring rules</b> &mdash; every event gets a risk score based on amount, frequency, after-hours timing.</li>
+    <li><b>Immutable audit log</b> &mdash; SHA-256 chained events, tamper-evident. Cannot be modified, deleted, or duplicated.</li>
+    <li><b>Real-time alerts</b> &mdash; email, Slack, Telegram, Discord, Twilio (WhatsApp/SMS) the moment a Critical event lands.</li>
+    <li><b>Compliance-ready</b> &mdash; PDF + XLSX reports for auditors, with risk filter, period filter, per-cashier breakdown.</li>
   </ul>
 
   <h2 style="color: #312E81; margin-top: 30px;">Real-time Dashboard</h2>
@@ -39,14 +39,14 @@
 
   <h2 style="color: #312E81; margin-top: 30px;">Margin Anomaly Detection (NEW in v1.9)</h2>
   <p>
-    Every POS order line is evaluated against the product's <code>standard_price</code>
+    Every POS order line is evaluated against the product&apos;s <code>standard_price</code>
     at the moment of sale. Two new event types catch the most common pricing-based fraud:
   </p>
   <ul>
-    <li><b style="color: #c00;">Negative Margin</b> — sale below cost.
+    <li><b style="color: #c00;">Negative Margin</b> &mdash; sale below cost.
         Risk: <span style="background:#dc2626;color:white;padding:2px 8px;border-radius:4px;">Critical</span>.
         Catches collusion (cashier sells to an accomplice at cost or below).</li>
-    <li><b style="color: #f59e0b;">Low Margin</b> — sale within configurable threshold above cost (default 5%).
+    <li><b style="color: #f59e0b;">Low Margin</b> &mdash; sale within configurable threshold above cost (default 5%).
         Risk: <span style="background:#f59e0b;color:white;padding:2px 8px;border-radius:4px;">Medium</span>.
         Catches sloppy discounts and pricing errors.</li>
   </ul>
@@ -82,7 +82,7 @@
   <p>
     Security Managers can mark multiple events as Justified in one operation, applying
     the same note to every selected event. The justification never alters the SHA-256
-    hash — the original event remains in the audit log forever, just flagged as reviewed.
+    hash &mdash; the original event remains in the audit log forever, just flagged as reviewed.
   </p>
   <p>
     <img src="screenshots/07_bulk_justify_wizard.png"
@@ -90,13 +90,13 @@
          style="width:100%;max-width:1100px;border:1px solid #eee;border-radius:8px;"/>
   </p>
 
-  <h2 style="color: #312E81; margin-top: 30px;">Reports — PDF and Excel</h2>
+  <h2 style="color: #312E81; margin-top: 30px;">Reports &mdash; PDF and Excel</h2>
   <p>
     Two report wizards out of the box:
   </p>
   <ul>
-    <li><b>Audit Report</b> — custom date range, with risk-level filter (All / Risky / High+Critical / Critical only). Output: PDF or XLSX.</li>
-    <li><b>Shift Report</b> — per POS session, with per-cashier breakdown of voids, discounts, refunds, price overrides, cash outs, and total accumulated risk score. Output: PDF or XLSX.</li>
+    <li><b>Audit Report</b> &mdash; custom date range, with risk-level filter (All / Risky / High+Critical / Critical only). Output: PDF or XLSX.</li>
+    <li><b>Shift Report</b> &mdash; per POS session, with per-cashier breakdown of voids, discounts, refunds, price overrides, cash outs, and total accumulated risk score. Output: PDF or XLSX.</li>
   </ul>
   <p>
     <img src="screenshots/05_audit_report_wizard.png"
@@ -111,11 +111,11 @@
 
   <h2 style="color: #312E81; margin-top: 30px;">Security &amp; Integrity</h2>
   <ul>
-    <li>SHA-256 chained hash — every event sealed at creation with a per-database secret salt.</li>
-    <li>Triple-layer immutability — ORM overrides + ACL + record rules. <code>unlink</code>, <code>copy</code>, and arbitrary <code>write</code> raise <code>UserError</code>.</li>
-    <li>Automated integrity verification — scheduled action recomputes hashes and flags any mismatch as <code>tampered</code>.</li>
-    <li>Separation of duties — POS Auditor (read-only) vs POS Security Manager (config + justify).</li>
-    <li>Multi-company aware — every event is company-scoped via record rules.</li>
+    <li>SHA-256 chained hash &mdash; every event sealed at creation with a per-database secret salt.</li>
+    <li>Triple-layer immutability &mdash; ORM overrides + ACL + record rules. <code>unlink</code>, <code>copy</code>, and arbitrary <code>write</code> raise <code>UserError</code>.</li>
+    <li>Automated integrity verification &mdash; scheduled action recomputes hashes and flags any mismatch as <code>tampered</code>.</li>
+    <li>Separation of duties &mdash; POS Auditor (read-only) vs POS Security Manager (config + justify).</li>
+    <li>Multi-company aware &mdash; every event is company-scoped via record rules.</li>
   </ul>
 
   <h2 style="color: #312E81; margin-top: 30px;">Real-time Alerts</h2>
@@ -124,17 +124,17 @@
     Three delivery channels:
   </p>
   <ul>
-    <li><b>Email</b> — comma-separated recipient list, fully templated.</li>
-    <li><b>Webhook</b> — generic JSON, Slack-formatted, Telegram-formatted, Discord-formatted, Twilio-formatted (WhatsApp / SMS).</li>
-    <li><b>Test Alert</b> button — send a sample alert end-to-end before going live.</li>
+    <li><b>Email</b> &mdash; comma-separated recipient list, fully templated.</li>
+    <li><b>Webhook</b> &mdash; generic JSON, Slack-formatted, Telegram-formatted, Discord-formatted, Twilio-formatted (WhatsApp / SMS).</li>
+    <li><b>Test Alert</b> button &mdash; send a sample alert end-to-end before going live.</li>
   </ul>
 
   <h2 style="color: #312E81; margin-top: 30px;">Tech Stack</h2>
   <ul>
-    <li>Python 3 + Odoo ORM — backend events, scoring, integrity</li>
-    <li>OWL 2 components + Chart.js — dashboard</li>
-    <li>QWeb + xlsxwriter — reports</li>
-    <li>Pure point_of_sale extension — no external dependencies beyond xlsxwriter (optional)</li>
+    <li>Python 3 + Odoo ORM &mdash; backend events, scoring, integrity</li>
+    <li>OWL 2 components + Chart.js &mdash; dashboard</li>
+    <li>QWeb + xlsxwriter &mdash; reports</li>
+    <li>Pure point_of_sale extension &mdash; no external dependencies beyond xlsxwriter (optional)</li>
   </ul>
 
   <h2 style="color: #312E81; margin-top: 30px;">Compatibility</h2>
@@ -146,7 +146,7 @@
 
   <h2 style="color: #312E81; margin-top: 30px;">License</h2>
   <p>
-    OPL-1 (Odoo Proprietary License v1) — perpetual, single-database license.
+    OPL-1 (Odoo Proprietary License v1) &mdash; perpetual, single-database license.
     Source code published on GitHub at <code>github.com/neurodev-apps/pos_sentinel</code>
     for transparency and community auditability.
   </p>
@@ -154,7 +154,7 @@
   <hr/>
 
   <p style="text-align:center; color:#666; font-size: 0.95em; margin-top: 30px;">
-    Built by <b>NeuroDev</b> — Chile · neurodev.cl · contacto@neurodev.cl
+    Built by <b>NeuroDev</b> &mdash; Chile &middot; neurodev.cl &middot; contacto@neurodev.cl
   </p>
 
 </section>
