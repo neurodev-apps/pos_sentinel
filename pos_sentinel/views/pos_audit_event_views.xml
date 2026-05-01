@@ -48,9 +48,9 @@
                                 type="object"
                                 class="btn-success"
                                 groups="pos_sentinel.group_pos_security_manager"
-                                attrs="{'invisible': [('is_justified', '=', True)]}"/>
+                                invisible="is_justified"/>
                         <div class="alert alert-success mb-0 py-1 px-3"
-                             attrs="{'invisible': [('is_justified', '=', False)]}">
+                             invisible="not is_justified">
                             <i class="fa fa-check-circle"/> Justified by
                             <field name="justified_by_id" readonly="1" nolabel="1" class="d-inline"/>
                             on <field name="justified_date" readonly="1" nolabel="1" class="d-inline"/>
@@ -102,12 +102,24 @@
                             <field name="company_id" groups="base.group_multi_company"/>
                         </group>
                     </group>
+                    <group string="Margin (only for margin events)"
+                           invisible="event_type not in ('negative_margin','low_margin')">
+                        <group>
+                            <field name="cost_at_sale"/>
+                            <field name="selling_price"/>
+                            <field name="quantity"/>
+                        </group>
+                        <group>
+                            <field name="margin_amount"/>
+                            <field name="margin_pct"/>
+                        </group>
+                    </group>
                     <notebook>
                         <page string="Event Details" name="details">
                             <field name="details" widget="ace" options="{'mode': 'json'}"/>
                         </page>
                         <page string="Justification" name="justification"
-                              attrs="{'invisible': [('is_justified', '=', False)]}">
+                              invisible="not is_justified">
                             <group>
                                 <field name="justified_by_id" readonly="1"/>
                                 <field name="justified_date" readonly="1"/>
@@ -166,21 +178,25 @@
                         domain="[('event_type', '=', 'discount')]"/>
                 <filter name="filter_cash" string="Cash Movements"
                         domain="[('event_type', 'in', ('cash_in', 'cash_out'))]"/>
+                <filter name="filter_negative_margin" string="Negative Margin"
+                        domain="[('event_type', '=', 'negative_margin')]"/>
+                <filter name="filter_low_margin" string="Low Margin"
+                        domain="[('event_type', '=', 'low_margin')]"/>
+                <filter name="filter_margin_issues" string="All Margin Issues"
+                        domain="[('event_type', 'in', ('negative_margin', 'low_margin'))]"/>
                 <separator/>
-                <group expand="0" string="Group By">
-                    <filter name="group_event_type" string="Event Type"
-                            context="{'group_by': 'event_type'}"/>
-                    <filter name="group_risk_level" string="Risk Level"
-                            context="{'group_by': 'risk_level'}"/>
-                    <filter name="group_user" string="User"
-                            context="{'group_by': 'user_id'}"/>
-                    <filter name="group_pos_config" string="POS Config"
-                            context="{'group_by': 'pos_config_id'}"/>
-                    <filter name="group_session" string="Session"
-                            context="{'group_by': 'pos_session_id'}"/>
-                    <filter name="group_date" string="Date"
-                            context="{'group_by': 'create_date:day'}"/>
-                </group>
+                <filter name="group_event_type" string="Event Type"
+                        context="{'group_by': 'event_type'}"/>
+                <filter name="group_risk_level" string="Risk Level"
+                        context="{'group_by': 'risk_level'}"/>
+                <filter name="group_user" string="User"
+                        context="{'group_by': 'user_id'}"/>
+                <filter name="group_pos_config" string="POS Config"
+                        context="{'group_by': 'pos_config_id'}"/>
+                <filter name="group_session" string="Session"
+                        context="{'group_by': 'pos_session_id'}"/>
+                <filter name="group_date" string="Date"
+                        context="{'group_by': 'create_date:day'}"/>
             </search>
         </field>
     </record>
