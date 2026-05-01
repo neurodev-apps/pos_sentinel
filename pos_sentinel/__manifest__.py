@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'POS Sentinel - Behavioral Fraud Detection',
-    'version': '17.0.1.6.0',
+    'version': '17.0.1.7.0',
     'category': 'Point of Sale',
     'summary': 'Real-time behavioral fraud detection and immutable audit trail for Odoo POS',
     'description': """
@@ -58,10 +58,13 @@ Security
         'views/pos_audit_event_views.xml',
         'views/pos_scoring_rule_views.xml',
         'views/pos_sentinel_report_wizard_views.xml',
+        'views/pos_sentinel_shift_report_wizard_views.xml',
         'views/pos_sentinel_menuitem.xml',
         'views/res_config_settings_views.xml',
         'report/pos_sentinel_report.xml',
         'report/pos_sentinel_report_template.xml',
+        'report/pos_sentinel_shift_report.xml',
+        'report/pos_sentinel_shift_report_template.xml',
     ],
     'assets': {
         'point_of_sale._assets_pos': [
