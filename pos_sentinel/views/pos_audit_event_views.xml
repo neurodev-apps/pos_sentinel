@@ -6,7 +6,7 @@
         <field name="name">pos.audit.event.list</field>
         <field name="model">pos.audit.event</field>
         <field name="arch" type="xml">
-            <list create="0" edit="0" delete="0" export_xlsx="1"
+            <tree create="0" edit="0" delete="0" export_xlsx="1"
                   decoration-danger="risk_level in ('high', 'critical') and not is_justified"
                   decoration-warning="risk_level == 'medium' and not is_justified"
                   decoration-muted="risk_level == 'none' or is_justified">
@@ -31,7 +31,7 @@
                 <field name="is_justified" optional="show" widget="boolean"/>
                 <field name="company_id" optional="hide"
                        groups="base.group_multi_company"/>
-            </list>
+            </tree>
         </field>
     </record>
 
@@ -41,6 +41,7 @@
         <field name="model">pos.audit.event</field>
         <field name="arch" type="xml">
             <form create="0" edit="0" delete="0">
+                <field name="is_justified" invisible="1"/>
                 <sheet>
                     <header>
                         <button name="action_open_justify_wizard"
@@ -205,7 +206,7 @@
     <record id="action_pos_audit_event" model="ir.actions.act_window">
         <field name="name">POS Audit Events</field>
         <field name="res_model">pos.audit.event</field>
-        <field name="view_mode">list,form,pivot,graph</field>
+        <field name="view_mode">tree,form,pivot,graph</field>
         <field name="search_view_id" ref="view_pos_audit_event_search"/>
         <field name="context">{'search_default_filter_today': 1}</field>
         <field name="help" type="html">
