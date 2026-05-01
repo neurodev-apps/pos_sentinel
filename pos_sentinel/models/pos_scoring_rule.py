@@ -231,6 +231,57 @@ class PosScoringEngine(models.AbstractModel):
         return current_hour < rule.business_hours_start or current_hour >= rule.business_hours_end
 
     @api.model
+    def _evaluate_after_hours_global(self):
+        """Evaluate the global after-hours config against current local time.
+
+        Returns dict with:
+            - is_after_hours: bool
+            - boost: float (points to add to risk_score, 0 if disabled)
+            - reason: str (for forensic context)
+        """
+        ICP = self.env['ir.config_parameter'].sudo()
+        enabled = (ICP.get_param('pos_sentinel.after_hours_enabled') or 'True') == 'True'
+        if not enabled:
+            return {'is_after_hours': False, 'boost': 0.0, 'reason': 'disabled'}
+
+        try:
+            start = float(ICP.get_param('pos_sentinel.business_hours_start') or 8.0)
+            end = float(ICP.get_param('pos_sentinel.business_hours_end') or 22.0)
+            boost = float(ICP.get_param('pos_sentinel.after_hours_boost') or 25.0)
+        except (TypeError, ValueError):
+            start, end, boost = 8.0, 22.0, 25.0
+        weekend_after_hours = (ICP.get_param('pos_sentinel.weekend_is_after_hours') or 'False') == 'True'
+
+        # Resolve timezone: company partner tz > user tz > UTC
+        tz_name = self.env.company.partner_id.tz or self.env.user.tz or 'UTC'
+        try:
+            tz = pytz.timezone(tz_name)
+        except pytz.exceptions.UnknownTimeZoneError:
+            tz = pytz.UTC
+
+        now_local = pytz.UTC.localize(fields.Datetime.now()).astimezone(tz)
+        current_hour = now_local.hour + now_local.minute / 60.0
+        weekday = now_local.weekday()  # Monday=0, Sunday=6
+
+        # Weekend check first (highest priority)
+        if weekend_after_hours and weekday >= 5:
+            return {
+                'is_after_hours': True,
+                'boost': boost,
+                'reason': 'weekend (%s)' % ('Saturday' if weekday == 5 else 'Sunday'),
+            }
+
+        # Hours check
+        if current_hour < start or current_hour >= end:
+            return {
+                'is_after_hours': True,
+                'boost': boost,
+                'reason': 'outside %.1f-%.1f (now %.2f)' % (start, end, current_hour),
+            }
+
+        return {'is_after_hours': False, 'boost': 0.0, 'reason': 'within business hours'}
+
+    @api.model
     def _score_to_level(self, score):
         """Map a numeric score to a risk level using ICP thresholds."""
         ICP = self.env['ir.config_parameter'].sudo()

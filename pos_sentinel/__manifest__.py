@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'POS Sentinel - Behavioral Fraud Detection',
-    'version': '17.0.1.9.0',
+    'version': '17.0.1.10.0',
     'category': 'Point of Sale',
     'summary': 'Real-time behavioral fraud detection, margin anomaly alerts and immutable audit trail for Odoo POS',
     'description': """
@@ -17,6 +17,7 @@ Key Features
 * **Shadow Logger**: Captures POS events in real time without affecting cashier workflow.
 * **Neuro-Scoring Engine**: Calculates risk scores based on configurable behavioral rules.
 * **Margin Anomaly Detection**: Flags POS sales below cost (Critical) or below configurable margin threshold (Medium) — catches collusion and pricing errors instantly.
+* **After-Hours Activity Detection**: Every event is checked against your configured business hours. Operations outside hours (or on weekends, optional) get an automatic risk score boost and are flagged for filtering, reporting, and investigation.
 * **Immutable Audit Trail**: SHA-256 integrity hashing with dynamic salt — tamper-evident.
 * **Real-time Alerts**: Automatic email + webhook (Slack / Telegram / Discord / Twilio) notifications when risk thresholds are exceeded.
 * **Compliance Dashboard**: OWL 2 dashboard with charts and drill-down analytics.
