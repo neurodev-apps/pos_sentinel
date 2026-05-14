@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'POS Sentinel - Behavioral Fraud Detection',
-    'version': '17.0.1.10.0',
+    'version': '17.0.1.10.1',
     'category': 'Point of Sale',
     'summary': 'Real-time behavioral fraud detection, margin anomaly alerts and immutable audit trail for Odoo POS',
     'description': """
@@ -48,7 +48,7 @@ Security
     'website': 'https://neurodev.cl',
     'support': 'contacto@neurodev.cl',
     'license': 'OPL-1',
-    'price': 299.00,
+    'price': 199.00,
     'currency': 'USD',
     'uninstall_hook': 'uninstall_hook',
     'depends': [
