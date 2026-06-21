@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import hashlib
+import hmac
+import json
 import logging
 import secrets
 import threading
@@ -11,6 +13,55 @@ _logger = logging.getLogger(__name__)
 # Salt cache keyed by DB name — multi-DB safe
 _salt_cache = {}
 _salt_lock = threading.Lock()
+
+# Hash algorithm versions stored on each event (PS-CR-01/02).
+#   None / 1 -> legacy salted SHA-256 (events created before the upgrade)
+#   2        -> HMAC-SHA256 over the full payload + previous_hash (chained)
+HASH_VERSION_HMAC_CHAIN = 2
+
+# Fixed key for the PostgreSQL advisory lock that serialises hash-chain writes
+# so concurrent transactions never fork the chain (PS-CR-02).
+_CHAIN_LOCK_KEY = 5417823094
+
+
+def _build_event_payload_v2(fields):
+    """Canonical JSON payload hashed by the v2 algorithm (PS-CR-01/02).
+
+    Centralised so creation, ``_recompute_hash`` and the integrity cron all
+    produce byte-for-byte identical payloads. Covers far more than v1: adds
+    company_id, amount, risk_level and the chain link previous_hash, so that
+    altering any of those — or deleting an intermediate record — is detected.
+    ``company_id`` is normalised to int-or-False (never None) for SQL/ORM parity.
+    """
+    company_id = fields.get('company_id')
+    return json.dumps(
+        {
+            'user_id': fields.get('user_id'),
+            'event_type': fields.get('event_type') or '',
+            'pos_session_id': fields.get('pos_session_id') or 0,
+            'pos_order_id': fields.get('pos_order_id') or 0,
+            'company_id': company_id or False,
+            # float() so a Monetary read back as Decimal via raw SQL serialises
+            # identically to the float used at creation time.
+            'amount': float(fields.get('amount') or 0.0),
+            'risk_level': fields.get('risk_level') or '',
+            'create_date': fields.get('create_date') or '',
+            'details': fields.get('details') or '',
+            'previous_hash': fields.get('previous_hash') or '',
+        },
+        sort_keys=True,
+        ensure_ascii=False,
+        default=str,
+    )
+
+
+def compute_event_hash_v2(env, fields):
+    """HMAC-SHA256 of the v2 payload, keyed with the sentinel secret (PS-CR-01)."""
+    secret = get_sentinel_salt(env)
+    payload = _build_event_payload_v2(fields)
+    return hmac.new(
+        secret.encode('utf-8'), payload.encode('utf-8'), hashlib.sha256
+    ).hexdigest()
 
 
 def invalidate_salt_cache():

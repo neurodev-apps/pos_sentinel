@@ -151,7 +151,17 @@ export class PosSentinelDashboard extends Component {
             (e.risk_level || "").toUpperCase(),
             this.formatScore(e.risk_score),
         ]);
-        const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+        // PS-CR-03: neutralise CSV/formula injection — cells starting with
+        // =, +, -, @, tab or CR get a leading quote so spreadsheets treat them
+        // as text, not formulas.
+        const sanitize = (v) => {
+            let s = String(v);
+            if (/^[=+\-@\t\r]/.test(s)) {
+                s = "'" + s;
+            }
+            return `"${s.replace(/"/g, '""')}"`;
+        };
+        const csv = [headers, ...rows].map(r => r.map(sanitize).join(",")).join("\n");
         const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
