@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'POS Sentinel - Behavioral Fraud Detection',
-    'version': '19.0.1.10.1',
+    'version': '19.0.1.11.0',
     'category': 'Point of Sale',
     'summary': 'Real-time behavioral fraud detection, margin anomaly alerts and immutable audit trail for Odoo POS',
     'description': """
@@ -39,9 +39,11 @@ Monitored Events
 
 Security
 --------
-* Triple-layer immutability: ORM overrides + ACL + record rules
-* SHA-256 integrity hashing with cryptographically-secure dynamic salt
-* Automated integrity verification via scheduled action
+* ORM-enforced immutability, hardened with ACL and multi-company record rules
+* Chained HMAC-SHA256 integrity hashing — tamper- and deletion-evident
+* Sensitive-data minimisation: no customer PII stored in the audit log
+* Automated full-chain integrity verification via scheduled action
+* SSRF-hardened webhook alerts (https-only, internal hosts blocked)
 * Separation of duties: POS Auditor (read-only) vs Security Manager (config)
     """,
     'author': 'NeuroDev',

@@ -9,7 +9,10 @@ from datetime import timedelta
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 
-from .pos_audit_engine import get_sentinel_salt, compute_event_hash
+from .pos_audit_engine import (
+    get_sentinel_salt, compute_event_hash, compute_event_hash_v2,
+    HASH_VERSION_HMAC_CHAIN, _CHAIN_LOCK_KEY,
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -176,7 +179,23 @@ class PosAuditEvent(models.Model):
         readonly=True,
         copy=False,
         index=True,
-        help='SHA-256 hash for tamper detection.',
+        help='HMAC-SHA256 integrity hash over the full payload, chained to the '
+             'previous event (v2). Tamper- and deletion-evident.',
+    )
+    previous_hash = fields.Char(
+        string='Previous Hash',
+        size=64,
+        readonly=True,
+        copy=False,
+        help='Integrity hash of the preceding event. Links the chain so that '
+             'deleting or reordering an intermediate record is detected (PS-CR-02).',
+    )
+    hash_version = fields.Integer(
+        string='Hash Version',
+        readonly=True,
+        copy=False,
+        help='Integrity algorithm. Empty/1 = legacy salted SHA-256; '
+             '2 = chained HMAC-SHA256 over the full payload.',
     )
     is_tampered = fields.Boolean(
         string='Tampered',
@@ -249,7 +268,14 @@ class PosAuditEvent(models.Model):
     # ── Immutability: triple-layer protection ────────────────────
 
     def unlink(self):
-        """Prevent deletion of audit events."""
+        """Prevent deletion of audit events.
+
+        An unlink on an empty recordset is a legitimate no-op: Odoo core and
+        other modules call ``model.browse().unlink()`` generically. Only block
+        the operation when there is actually something to delete (PS-CR-07).
+        """
+        if not self:
+            return True
         raise UserError(_(
             'POS audit events cannot be deleted. '
             'They are immutable for security and compliance purposes.'
@@ -291,8 +317,32 @@ class PosAuditEvent(models.Model):
     # ── Hash recomputation ───────────────────────────────────────
 
     def _recompute_hash(self):
-        """Recompute SHA-256 hash for a single event record."""
+        """Recompute the integrity hash using the algorithm in ``hash_version``.
+
+        v2 reproduces the chained HMAC over the full payload; legacy records
+        (empty/1) reproduce the original salted SHA-256, so events created
+        before the upgrade keep verifying. The chain link itself is checked by
+        the integrity cron, not here.
+        """
         self.ensure_one()
+        if (self.hash_version or 1) >= 2:
+            create_date_str = (
+                self.create_date.strftime('%Y-%m-%d %H:%M:%S')
+                if self.create_date else ''
+            )
+            return compute_event_hash_v2(self.env, {
+                'user_id': self.user_id.id,
+                'event_type': self.event_type,
+                'pos_session_id': self.pos_session_id.id or 0,
+                'pos_order_id': self.pos_order_id.id or 0,
+                'company_id': self.company_id.id if self.company_id else False,
+                'amount': self.amount,
+                'risk_level': self.risk_level,
+                'create_date': create_date_str,
+                'details': self.details or '',
+                'previous_hash': self.previous_hash or '',
+            })
+        # Legacy v1 salted SHA-256
         return compute_event_hash(
             self.env,
             user_id=self.user_id.id,
@@ -401,6 +451,22 @@ class PosAuditEvent(models.Model):
             details_dict['_local_pos_order_id'] = order_id_raw
             details_json = json.dumps(details_dict, ensure_ascii=False, default=str)
 
+        # PS-CR-06: company of the AFFECTED record, not the user's active company.
+        # Backend callers may pass company_id explicitly; otherwise derive it
+        # from the order / session / config; fall back to env.company.
+        company_id = vals.get('company_id')
+        if not company_id and order_id:
+            order = self.env['pos.order'].browse(order_id)
+            company_id = order.company_id.id if order.exists() else False
+        if not company_id and session_id:
+            session = self.env['pos.session'].browse(session_id)
+            company_id = session.company_id.id if session.exists() else False
+        if not company_id and config_id:
+            config = self.env['pos.config'].browse(config_id)
+            company_id = config.company_id.id if config.exists() else False
+        if not company_id:
+            company_id = self.env.company.id
+
         create_vals = {
             'event_type': event_type,
             'user_id': user_id,
@@ -412,7 +478,7 @@ class PosAuditEvent(models.Model):
             'amount': vals.get('amount', 0.0),
             'currency_id': vals.get('currency_id', self.env.company.currency_id.id),
             'details': details_json,
-            'company_id': self.env.company.id,
+            'company_id': company_id,
         }
 
         # Margin metrics — populated for negative_margin / low_margin events
@@ -460,19 +526,39 @@ class PosAuditEvent(models.Model):
         create_vals['hash'] = ''
 
         try:
+            # PS-CR-02: serialise the chain and read the tail hash atomically so
+            # concurrent transactions never link to the same predecessor.
+            self.env.cr.execute('SELECT pg_advisory_xact_lock(%s)', (_CHAIN_LOCK_KEY,))
+            self.env.cr.execute('SELECT hash FROM pos_audit_event ORDER BY id DESC LIMIT 1')
+            row = self.env.cr.fetchone()
+            previous_hash = (row[0] if row else '') or ''
+            create_vals['previous_hash'] = previous_hash
+            create_vals['hash_version'] = HASH_VERSION_HMAC_CHAIN
+
             record = self.sudo().create(create_vals)
 
-            # Compute hash using the real create_date from the DB
-            audit_hash = compute_event_hash(
-                self.env,
-                user_id=user_id,
-                event_type=event_type,
-                pos_session_id=session_id or 0,
-                pos_order_id=order_id or 0,
-                create_date=record.create_date,
-                details=details_json,
+            # PS-CR-01: HMAC-SHA256 over the full payload using the real
+            # create_date and the stored company/risk values.
+            create_date_str = (
+                record.create_date.strftime('%Y-%m-%d %H:%M:%S')
+                if record.create_date else ''
             )
+            audit_hash = compute_event_hash_v2(self.env, {
+                'user_id': user_id,
+                'event_type': event_type,
+                'pos_session_id': session_id or 0,
+                'pos_order_id': order_id or 0,
+                'company_id': record.company_id.id if record.company_id else False,
+                'amount': create_vals.get('amount') or 0.0,
+                'risk_level': create_vals.get('risk_level') or '',
+                'create_date': create_date_str,
+                'details': details_json,
+                'previous_hash': previous_hash,
+            })
             record._write_hash(audit_hash)
+            # Persist the signed hash immediately so the record is durable and
+            # raw-SQL readers (the integrity cron) always see the final value.
+            record.flush_recordset(['hash', 'previous_hash', 'hash_version'])
 
             # Dispatch real-time alert for high/critical events
             if record.risk_level in ('high', 'critical'):
@@ -542,6 +628,30 @@ class PosAuditEvent(models.Model):
             email_values={'email_to': email_to},
         )
 
+    @api.model
+    def _is_safe_webhook_url(self, url):
+        """PS-CR-05: allow only https URLs to public hosts (anti-SSRF).
+
+        Rejects non-https schemes and any host that resolves to a private,
+        loopback, link-local, reserved or cloud-metadata address. Fail-closed:
+        if the host cannot be resolved/validated, the webhook is not sent.
+        """
+        import ipaddress
+        import socket
+        from urllib.parse import urlparse
+        try:
+            parsed = urlparse(url or '')
+            if parsed.scheme != 'https' or not parsed.hostname:
+                return False
+            for res in socket.getaddrinfo(parsed.hostname, None):
+                ip = ipaddress.ip_address(res[4][0])
+                if (ip.is_private or ip.is_loopback or ip.is_link_local
+                        or ip.is_reserved or ip.is_multicast or ip.is_unspecified):
+                    return False
+            return True
+        except Exception:
+            return False
+
     def _send_alert_webhook(self, url, fmt='generic'):
         """POST a JSON payload to the configured webhook.
 
@@ -553,6 +663,13 @@ class PosAuditEvent(models.Model):
             import requests
         except ImportError:
             _logger.warning("POS Sentinel: 'requests' library not available")
+            return
+
+        # PS-CR-05: validate the destination before any network call.
+        if not self._is_safe_webhook_url(url):
+            _logger.warning(
+                "POS Sentinel: webhook URL rejected (must be https to a public host)"
+            )
             return
 
         type_label = dict(self._fields['event_type'].selection).get(
@@ -605,10 +722,16 @@ class PosAuditEvent(models.Model):
             }
 
         try:
-            response = requests.post(url, json=payload, timeout=5)
+            # PS-CR-05: don't follow redirects (could bounce to an internal host).
+            response = requests.post(url, json=payload, timeout=5, allow_redirects=False)
             response.raise_for_status()
         except requests.exceptions.RequestException as e:
-            _logger.warning("POS Sentinel: webhook POST failed (%s): %s", url, e)
+            # PS-MD-01: log only the host — the path carries the webhook secret.
+            from urllib.parse import urlparse
+            _logger.warning(
+                "POS Sentinel: webhook POST failed (host=%s): %s",
+                urlparse(url).netloc, e,
+            )
 
     @api.model
     def _send_test_alert(self):
@@ -661,12 +784,29 @@ class PosAuditEvent(models.Model):
         Returns:
             dict with 'created' count.
         """
+        # PS-MD-02: bound the public RPC — cap batch size and per-event payload
+        # to prevent log inflation / storage DoS from the POS client.
+        MAX_BATCH = 200
+        MAX_DETAILS = 16384  # 16 KB per event
         allowed_types = {t[0] for t in EVENT_TYPES}
+        if not isinstance(events, (list, tuple)):
+            return {'created': 0}
         created = 0
-        for event_data in events:
+        for event_data in events[:MAX_BATCH]:
+            if not isinstance(event_data, dict):
+                continue
             event_type = event_data.get('event_type')
             if not event_type or event_type not in allowed_types:
                 continue
+            details = event_data.get('details')
+            if isinstance(details, str) and len(details) > MAX_DETAILS:
+                event_data = dict(event_data, details=details[:MAX_DETAILS])
+            elif isinstance(details, dict):
+                try:
+                    if len(json.dumps(details, default=str)) > MAX_DETAILS:
+                        event_data = dict(event_data, details={'_truncated': True})
+                except Exception:
+                    event_data = dict(event_data, details={})
             try:
                 self.create_event(event_type, event_data)
                 created += 1
@@ -687,24 +827,34 @@ class PosAuditEvent(models.Model):
         raw SQL for performance. Marks tampered records and persists
         results for the dashboard.
         """
-        date_from = fields.Datetime.now() - timedelta(days=7)
-        company_ids = self.env.companies.ids
+        # PS-MD-03: window configurable; 0 (default) = verify the FULL history.
+        ICP = self.env['ir.config_parameter'].sudo()
+        try:
+            window_days = int(ICP.get_param('pos_sentinel.integrity_window_days', '0'))
+        except (ValueError, TypeError):
+            window_days = 0
 
-        if not company_ids:
-            return
+        where = ''
+        params = ()
+        if window_days > 0:
+            where = 'WHERE create_date >= %s'
+            params = (fields.Datetime.now() - timedelta(days=window_days),)
 
+        # No company filter: the hash chain is global, so the whole table is
+        # walked in id order to verify chain continuity (PS-CR-02).
         self.env.cr.execute("""
             SELECT id, user_id, event_type, pos_session_id, pos_order_id,
-                   create_date, details, hash
+                   create_date, details, hash, company_id, amount, risk_level,
+                   previous_hash, hash_version
             FROM pos_audit_event
-            WHERE create_date >= %s
-              AND company_id IN %s
+            """ + where + """
             ORDER BY id ASC
-        """, (date_from, tuple(company_ids)))
+        """, params)
 
         total = 0
         tampered_ids = []
         BATCH = 1000
+        prev_stored_hash = ''  # hash of the preceding row — for the chain check
 
         while True:
             rows = self.env.cr.fetchmany(BATCH)
@@ -713,32 +863,55 @@ class PosAuditEvent(models.Model):
             total += len(rows)
             for row in rows:
                 (log_id, user_id, event_type, session_id, order_id,
-                 create_date, details, stored_hash) = row
+                 create_date, details, stored_hash, company_id, amount,
+                 risk_level, previous_hash, hash_version) = row
+                create_date_str = create_date.strftime('%Y-%m-%d %H:%M:%S') if create_date else ''
+                tampered = False
 
-                expected = compute_event_hash(
-                    self.env,
-                    user_id=user_id,
-                    event_type=event_type,
-                    pos_session_id=session_id or 0,
-                    pos_order_id=order_id or 0,
-                    create_date=create_date,
-                    details=details or '',
-                )
+                if (hash_version or 1) >= 2:
+                    expected = compute_event_hash_v2(self.env, {
+                        'user_id': user_id,
+                        'event_type': event_type,
+                        'pos_session_id': session_id or 0,
+                        'pos_order_id': order_id or 0,
+                        'company_id': company_id or False,
+                        'amount': amount or 0.0,
+                        'risk_level': risk_level or '',
+                        'create_date': create_date_str,
+                        'details': details or '',
+                        'previous_hash': previous_hash,
+                    })
+                    # Chain link: previous_hash must equal the prior row's hash.
+                    if (previous_hash or '') != (prev_stored_hash or ''):
+                        tampered = True
+                else:
+                    expected = compute_event_hash(
+                        self.env,
+                        user_id=user_id,
+                        event_type=event_type,
+                        pos_session_id=session_id or 0,
+                        pos_order_id=order_id or 0,
+                        create_date=create_date,
+                        details=details or '',
+                    )
+
                 if not hmac.compare_digest(stored_hash or '', expected):
+                    tampered = True
+
+                if tampered:
                     tampered_ids.append(log_id)
                     _logger.warning(
                         "POS SENTINEL INTEGRITY ALERT: pos.audit.event id=%s "
-                        "hash mismatch (stored=%s, expected=%s)",
-                        log_id, stored_hash, expected,
+                        "hash/chain mismatch", log_id,
                     )
+
+                prev_stored_hash = stored_hash
 
         # Mark tampered records
         if tampered_ids:
-            tampered_records = self.sudo().browse(tampered_ids)
-            tampered_records._mark_tampered()
+            self.sudo().browse(tampered_ids)._mark_tampered()
 
         # Persist results for dashboard
-        ICP = self.env['ir.config_parameter'].sudo()
         ICP.set_param(
             'pos_sentinel.last_integrity_check',
             fields.Datetime.to_string(fields.Datetime.now()),

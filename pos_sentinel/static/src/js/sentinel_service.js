@@ -7,8 +7,9 @@
  * in batches via orm.call(). Uses fire-and-forget pattern: errors are
  * caught and logged, never shown to the cashier.
  *
- * The service exposes itself as window.__posSentinel for access from
- * POS model patches (which don't have access to env.services).
+ * The service is exposed via the module-level getSentinel() helper for the
+ * POS model patches (which lack env.services) — NOT on window, so the audited
+ * cashier cannot forge events from the browser console (PS-CR-09).
  */
 
 import { registry } from "@web/core/registry";
@@ -17,6 +18,15 @@ const BATCH_SIZE = 20;
 const FLUSH_INTERVAL_MS = 5000;
 const MAX_QUEUE_SIZE = 500;
 const MAX_FLUSH_RETRIES = 3;
+
+// Module-level reference to the running service instance. The POS model patches
+// (which lack env.services) read it via getSentinel() instead of a global window
+// property, so the audited cashier cannot forge events from the console (PS-CR-09).
+let _sentinelInstance = null;
+
+export function getSentinel() {
+    return _sentinelInstance;
+}
 
 export const sentinelService = {
     dependencies: ["orm"],
@@ -102,8 +112,8 @@ export const sentinelService = {
 
         const service = { logEvent, flushNow, getQueueSize: () => queue.length };
 
-        // Expose globally for POS model patches (which lack env.services)
-        window.__posSentinel = service;
+        // PS-CR-09: expose via module reference, NOT on window.
+        _sentinelInstance = service;
 
         // Cleanup on navigation away to prevent orphaned timers
         window.addEventListener("beforeunload", () => {
@@ -111,7 +121,13 @@ export const sentinelService = {
                 clearTimeout(flushTimer);
                 flushTimer = null;
             }
-            delete window.__posSentinel;
+            // PS-MD-05: best-effort flush of queued events before unload.
+            try {
+                flush();
+            } catch (e) {
+                // fire-and-forget — never block unload
+            }
+            _sentinelInstance = null;
         });
 
         return service;
