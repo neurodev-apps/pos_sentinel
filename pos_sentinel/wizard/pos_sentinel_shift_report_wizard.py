@@ -5,7 +5,7 @@ import io
 import logging
 
 from odoo import api, fields, models, _
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, AccessError
 
 from ..models.pos_audit_event import EVENT_TYPES, RISK_LEVELS
 
@@ -38,6 +38,11 @@ class PosSentinelShiftReportWizard(models.TransientModel):
     def _get_shift_data(self):
         self.ensure_one()
         session = self.pos_session_id
+        # PS-CR-04: the SQL below filters only by session id with raw cr.execute,
+        # bypassing record rules. Enforce company scope explicitly so a session
+        # of another company can never be reported here (cross-company leak).
+        if session.company_id and session.company_id not in self.env.companies:
+            raise AccessError(_('You do not have access to this POS session.'))
         cr = self.env.cr
 
         # Per-cashier breakdown
@@ -182,7 +187,13 @@ class PosSentinelShiftReportWizard(models.TransientModel):
             raise UserError(_('xlsxwriter is required. Install with: pip install xlsxwriter'))
 
         output = io.BytesIO()
-        wb = xlsxwriter.Workbook(output, {'in_memory': True})
+        # PS-CR-03: disable formula/URL auto-conversion so DB values starting
+        # with = + - @ are written as plain text, never executable formulas.
+        wb = xlsxwriter.Workbook(output, {
+            'in_memory': True,
+            'strings_to_formulas': False,
+            'strings_to_urls': False,
+        })
 
         hdr = wb.add_format({'bold': True, 'bg_color': '#312E81', 'font_color': 'white', 'border': 1})
         title_fmt = wb.add_format({'bold': True, 'font_size': 14})
@@ -259,7 +270,7 @@ class PosSentinelShiftReportWizard(models.TransientModel):
 
         wb.close()
         output.seek(0)
-        filename = f"shift_report_{session.name.replace('/', '_')}.xlsx"
+        filename = f"shift_report_{(session.name or 'session').replace('/', '_')}.xlsx"
         attachment = self.env['ir.attachment'].create({
             'name': filename,
             'type': 'binary',

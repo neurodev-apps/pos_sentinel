@@ -62,14 +62,26 @@ class PosSentinelReportWizard(models.TransientModel):
         }
         return mapping.get(self.risk_levels, [])
 
+    def _effective_date_to(self):
+        """PS-MD-04: if date_to is at midnight, treat it as end-of-day so the
+        last day's events are not silently excluded by the ``<=`` comparison."""
+        dt = self.date_to
+        if dt and dt.hour == 0 and dt.minute == 0 and dt.second == 0:
+            return dt + timedelta(days=1) - timedelta(seconds=1)
+        return dt
+
     def _get_events(self):
-        """Fetch events matching the wizard filters, company-scoped."""
+        """Fetch events matching the wizard filters, company-scoped.
+
+        No sudo: the model's record rules already scope by company; sudo would
+        bypass them (PS-CR-04).
+        """
         domain = [
             ('create_date', '>=', self.date_from),
-            ('create_date', '<=', self.date_to),
+            ('create_date', '<=', self._effective_date_to()),
             ('company_id', 'in', self.env.companies.ids),
         ] + self._get_risk_domain()
-        return self.env['pos.audit.event'].sudo().search(
+        return self.env['pos.audit.event'].search(
             domain, order='create_date DESC', limit=10000,
         )
 
@@ -81,7 +93,7 @@ class PosSentinelReportWizard(models.TransientModel):
         # Use SQL for aggregations instead of iterating ORM records
         risk_domain = self._get_risk_domain()
         risk_sql = ""
-        params = [self.date_from, self.date_to, tuple(company_ids)]
+        params = [self.date_from, self._effective_date_to(), tuple(company_ids)]
 
         if risk_domain:
             risk_filter = risk_domain[0]
@@ -92,6 +104,9 @@ class PosSentinelReportWizard(models.TransientModel):
                 risk_sql = " AND risk_level = %s"
                 params.append(risk_filter[2])
 
+        # PS-CR-08: risk_sql is built ONLY from the closed Selection above
+        # (fixed literals, never user free-text), so this interpolation is not
+        # injectable; every real value still travels as a parametrised %s.
         base_where = "WHERE create_date >= %%s AND create_date <= %%s AND company_id IN %%s%s" % risk_sql
         qual_where = "WHERE pae.create_date >= %%s AND pae.create_date <= %%s AND pae.company_id IN %%s%s" % (
             risk_sql.replace('risk_level', 'pae.risk_level') if risk_sql else ''
@@ -195,7 +210,13 @@ class PosSentinelReportWizard(models.TransientModel):
             ))
 
         output = io.BytesIO()
-        wb = xlsxwriter.Workbook(output, {'in_memory': True})
+        # PS-CR-03: disable formula/URL auto-conversion so DB values starting
+        # with = + - @ are written as plain text, never executable formulas.
+        wb = xlsxwriter.Workbook(output, {
+            'in_memory': True,
+            'strings_to_formulas': False,
+            'strings_to_urls': False,
+        })
 
         # Formats
         header_fmt = wb.add_format({

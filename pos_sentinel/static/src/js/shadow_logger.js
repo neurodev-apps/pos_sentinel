@@ -23,12 +23,13 @@ import { PosOrder } from "@point_of_sale/app/models/pos_order";
 import { PosOrderline } from "@point_of_sale/app/models/pos_order_line";
 import { PosStore } from "@point_of_sale/app/store/pos_store";
 import { PaymentScreen } from "@point_of_sale/app/screens/payment_screen/payment_screen";
+import { getSentinel } from "./sentinel_service";
 
 // ─── Helpers ─────────────────────────────────────────────────────
 
-/** Get sentinel from global (for model patches without env) */
+/** Get the sentinel service via module reference, not window (PS-CR-09). */
 function sentinel() {
-    return window.__posSentinel || null;
+    return getSentinel();
 }
 
 /** Extract POS context from a model instance (order or orderline) */
@@ -247,7 +248,8 @@ patch(PosStore.prototype, {
                             order_name: order.name || "",
                             line_count: order.lines?.length || 0,
                             state: order.state || "",
-                            partner: order.partner_id?.name || "",
+                            // PS-CR-10: do not capture customer PII (partner name)
+                            // in the immutable cashier-fraud log.
                         },
                     });
                 } catch (e) {
@@ -305,7 +307,7 @@ patch(PaymentScreen.prototype, {
                         line_count: order.lines?.length || 0,
                         total: order.get_total_with_tax?.() || 0,
                         is_refund: isRefund,
-                        partner: order.partner_id?.name || "",
+                        // PS-CR-10: do not capture customer PII (partner name).
                         force_validate: isForceValidate,
                     },
                 });
