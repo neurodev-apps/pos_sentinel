@@ -50,7 +50,7 @@ Security
     'website': 'https://neurodev.cl',
     'support': 'contacto@neurodev.cl',
     'license': 'OPL-1',
-    'price': 199.00,
+    'price': 299.00,
     'currency': 'USD',
     'uninstall_hook': 'uninstall_hook',
     'depends': [
